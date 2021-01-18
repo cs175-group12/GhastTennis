@@ -9,8 +9,8 @@ title:  Team
 ## Nadya Djojosantoso
 ***UCI Net ID***: ndjojosa
 
-## USER 2
-***UCI Net ID***: ucinetid2
+## Daniel Gutierrez
+***UCI Net ID***: dagutie6
 
 ## USER 3
 ***UCI Net ID***: ucinetid3
