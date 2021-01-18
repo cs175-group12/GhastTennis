@@ -6,8 +6,8 @@ title:  Team
 # {{ page.title }}
 
 
-## USER 1
-***UCI Net ID***: ucinetid1
+## Nadya Djojosantoso
+***UCI Net ID***: ndjojosa
 
 ## USER 2
 ***UCI Net ID***: ucinetid2
