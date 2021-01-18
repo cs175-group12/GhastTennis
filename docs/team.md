@@ -12,5 +12,5 @@ title:  Team
 ## Daniel Gutierrez
 ***UCI Net ID***: dagutie6
 
-## USER 3
-***UCI Net ID***: ucinetid3
+## Jenny Tran Diep
+***UCI Net ID***: jtdiep
