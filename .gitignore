@@ -1,3 +1,11 @@
+# GitHub Pages
 _site/
 .sass-cache/
 .jekyll-metadata
+.jekyll-cache
+Gemfile
+Gemfile.lock
+
+# Malmo Libraries
+*.lib
+*.pyd
