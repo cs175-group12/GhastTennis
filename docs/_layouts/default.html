@@ -2,10 +2,12 @@
 <html lang="{{ site.lang | default: "en-US" }}">
 
   <head>
+    <title>{{ site.title }}: {{ page.title }}</title>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,maximum-scale=2">
     <link rel="stylesheet" type="text/css" media="screen" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ '/assets/images/favicon.ico' | relative_url }}">
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
   </head>
 
@@ -68,7 +70,7 @@
         {% if site.github.is_project_page %}
         <p class="copyright">{{ site.title | default: site.github.repository_name }} maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a>.</p>
         {% endif %}
-        <p>Published with <a href="https://pages.github.com">GitHub Pages.</a> Theme based on <a href="https://github.com/pages-themes/slate">Slate theme</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages.</a> Theme based on <a href="https://github.com/pages-themes/slate">Slate</a>.</p>
       </footer>
     </div>
   </body>
