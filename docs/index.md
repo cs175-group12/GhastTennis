@@ -3,7 +3,9 @@ layout: default
 title:  Home
 ---
 
-Source code: https://github.com/cs175-group12/GhastTennis
+## Welcome to the GhastTennis project!
+
+Source code: [https://github.com/cs175-group12/GhastTennis](https://github.com/cs175-group12/GhastTennis)
 
 Reports:
 
