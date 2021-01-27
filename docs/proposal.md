@@ -1,10 +1,8 @@
 ## Summary of the Project
 
-![](https://static.wikia.nocookie.net/minecraft_gamepedia/images/d/d5/Ghast_JE2_BE2.gif)
+In Minecraft, ghasts are large flying mob that can shoot fireballs at the player. The player can deflect the fireball by hitting it with the correct timing. Here is a video on how it works:
 
-In Minecraft, ghasts are large flying mob that can shoot fireballs at the player. The player can deflect the fireball by hitting it with the correct timing. 
-
-<iframe src="https://www.youtube.com/watch?v=sMioimZS_gY" width="768" height="432" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/sMioimZS_gY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 For our project, our agent will learn how to kill ghasts by deflecting fireballs back at them. Our agent will be given the position and heading of incoming fireballs, and the position of the ghast, and will have to learn where to aim and with what timing to swing to redirect the fireball at the ghast. 
 
