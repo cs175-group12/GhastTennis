@@ -8,13 +8,18 @@
     <ServerSection>
         <ServerHandlers>
             <FlatWorldGenerator generatorString="3;3*minecraft:bedrock;2;"/>
+            <DrawingDecorator> 
+                <DrawBlock x="0.5" y="3" z="0.5" type='diamond_ore' />
+            <DrawingDecorator/>
             <ServerQuitFromTimeUp timeLimitMs="30000"/>
             <ServerQuitWhenAnyAgentFinishes/>
         </ServerHandlers>
     </ServerSection>
 
-    <AgentSection mode="Creative">
+    <AgentSection mode="Survival">
         <Name>GhastTennis Agent</Name>
+        <AgentStart>
+            <Placement x="0.5" y="3" z="0.5"/>
         <AgentStart/>
         <AgentHandlers>
             <DiscreteMovementCommands/>
