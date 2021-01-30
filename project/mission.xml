@@ -8,9 +8,12 @@
     <ServerSection>
         <ServerHandlers>
             <FlatWorldGenerator generatorString="3;3*minecraft:bedrock;2;"/>
-            <DrawingDecorator> 
-                <DrawBlock x="0.5" y="3" z="0.5" type='diamond_ore' />
-            <DrawingDecorator/>
+            <DrawingDecorator>
+                    <DrawCuboid x1="0" y1="3" z1="7" x2="7" y2="7" z2="0" type="obsidian" />
+                    <DrawCuboid x1="1" y1="3" z1="6" x2="6" y2="6" z2="1" type="air" />
+                    <DrawCuboid x1="2" y1="3" z1="0" x2="5" y2="6" z2="0" type="air" />
+                    <DrawEntity type="Ghast" x="3.5" y="4" z="3.5"/>
+                </DrawingDecorator>
             <ServerQuitFromTimeUp timeLimitMs="30000"/>
             <ServerQuitWhenAnyAgentFinishes/>
         </ServerHandlers>
@@ -19,8 +22,8 @@
     <AgentSection mode="Survival">
         <Name>GhastTennis Agent</Name>
         <AgentStart>
-            <Placement x="0.5" y="3" z="0.5"/>
-        <AgentStart/>
+            <Placement x="3.5" y="3" z="-10"/>
+        </AgentStart>
         <AgentHandlers>
             <DiscreteMovementCommands/>
         </AgentHandlers>
