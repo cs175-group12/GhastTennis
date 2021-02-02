@@ -26,6 +26,7 @@
         </AgentStart>
         <AgentHandlers>
             <DiscreteMovementCommands/>
+            <ChatCommands/>
         </AgentHandlers>
     </AgentSection>
 </Mission>

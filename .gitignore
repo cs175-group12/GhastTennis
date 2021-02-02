@@ -9,3 +9,6 @@ Gemfile.lock
 # Malmo Libraries
 *.lib
 *.pyd
+
+# VS Code
+.vscode/
