@@ -17,6 +17,7 @@ class Agent:
             self.host.startMission(mission, mission_record)
         except RuntimeError as e:
             print('Error starting mission', e)
+            exit(1)
 
         # Wait for mission to start
         print("Waiting for the mission to start ", end=' ')
@@ -56,8 +57,11 @@ class Agent:
     def makeInvincible(self):
         self.host.sendCommand('chat /effect @p 11 10000 255 True')
 
-    def summonGhast(self, x, y, z):
-        self.host.sendCommand(f'chat /summon Ghast {x} {y} {z}')
+    def summonGhast(self, x, y, z, stationary=True):
+        if stationary:
+            self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast}}]}}')
+        else:
+            self.host.sendCommand(f'chat /summon Ghast {x} {y} {z}')
 
 if __name__ == '__main__':
     # Create default Malmo objects
