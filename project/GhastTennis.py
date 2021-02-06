@@ -52,12 +52,17 @@ class Agent:
         self.cleanWorld()
         self.makeInvincible()
         time.sleep(0.1)
-        self.summonGhast(0, 10, 0)
+        self.summonGhast(0, 5, -20)
+        time.sleep(1)
 
     def takeAction(self, world_state):
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
-        print('Ghasts:', ghasts)
-        print('Fireballs:', fireballs)
+        # print('Ghasts:', ghasts)
+        # print('Fireballs:', fireballs)
+
+        # End mission if all the ghasts are dead.
+        if len(ghasts) == 0:
+            self.host.sendCommand('quit')
 
     def cleanWorld(self):
         self.host.sendCommand('chat /entitydata @e[type=Ghast] {DeathLootTable:"minecraft:empty"}')
@@ -67,11 +72,11 @@ class Agent:
     def makeInvincible(self):
         self.host.sendCommand('chat /effect @p 11 10000 255 True')
 
-    def summonGhast(self, x, y, z, stationary=True):
+    def summonGhast(self, x, y, z, yaw=0, stationary=True):
         if stationary:
-            self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast}}]}}')
+            self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast, Rotation:[{yaw}f, 0f]}}]}}')
         else:
-            self.host.sendCommand(f'chat /summon Ghast {x} {y} {z}')
+            self.host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
 
     def getGhastsAndFireballs(self, world_state):
         if world_state.number_of_observations_since_last_state == 0:
