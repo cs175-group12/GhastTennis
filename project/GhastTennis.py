@@ -49,13 +49,20 @@ class Agent:
         print("Mission ended")
 
     def initialize(self):
+        self.cleanWorld()
         self.makeInvincible()
+        time.sleep(0.1)
         self.summonGhast(0, 10, 0)
 
     def takeAction(self, world_state):
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
         print('Ghasts:', ghasts)
         print('Fireballs:', fireballs)
+
+    def cleanWorld(self):
+        self.host.sendCommand('chat /entitydata @e[type=Ghast] {DeathLootTable:"minecraft:empty"}')
+        time.sleep(0.1)
+        self.host.sendCommand('chat /kill @e[type=!Player]')
 
     def makeInvincible(self):
         self.host.sendCommand('chat /effect @p 11 10000 255 True')
