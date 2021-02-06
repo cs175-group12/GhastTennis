@@ -6,14 +6,15 @@
     </About>
 
     <ServerSection>
+        <ServerInitialConditions>
+            <Time>
+                <StartTime>1000</StartTime>
+                <AllowPassageOfTime>false</AllowPassageOfTime>
+            </Time>
+            <Weather>clear</Weather>
+        </ServerInitialConditions>
         <ServerHandlers>
             <FlatWorldGenerator generatorString="3;3*minecraft:bedrock;2;"/>
-            <DrawingDecorator>
-                    <DrawCuboid x1="0" y1="3" z1="7" x2="7" y2="7" z2="0" type="obsidian" />
-                    <DrawCuboid x1="1" y1="3" z1="6" x2="6" y2="6" z2="1" type="air" />
-                    <DrawCuboid x1="2" y1="3" z1="0" x2="5" y2="6" z2="0" type="air" />
-                    <DrawEntity type="Ghast" x="3.5" y="4" z="3.5"/>
-                </DrawingDecorator>
             <ServerQuitFromTimeUp timeLimitMs="30000"/>
             <ServerQuitWhenAnyAgentFinishes/>
         </ServerHandlers>
