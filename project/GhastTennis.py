@@ -4,6 +4,7 @@ import MalmoPython
 import os
 import sys
 import time
+import json
 import functools
 print = functools.partial(print, flush=True)
 
@@ -48,20 +49,50 @@ class Agent:
         print("Mission ended")
 
     def initialize(self):
+        self.cleanWorld()
         self.makeInvincible()
-        self.summonGhast(0, 10, 0)
+        time.sleep(0.1)
+        self.summonGhast(0, 5, -20)
+        time.sleep(1)
 
     def takeAction(self, world_state):
-        pass
+        ghasts, fireballs = self.getGhastsAndFireballs(world_state)
+        # print('Ghasts:', ghasts)
+        # print('Fireballs:', fireballs)
+
+        # End mission if all the ghasts are dead.
+        if len(ghasts) == 0:
+            self.host.sendCommand('quit')
+
+    def cleanWorld(self):
+        self.host.sendCommand('chat /entitydata @e[type=Ghast] {DeathLootTable:"minecraft:empty"}')
+        time.sleep(0.1)
+        self.host.sendCommand('chat /kill @e[type=!Player]')
 
     def makeInvincible(self):
         self.host.sendCommand('chat /effect @p 11 10000 255 True')
 
-    def summonGhast(self, x, y, z, stationary=True):
+    def summonGhast(self, x, y, z, yaw=0, stationary=True):
         if stationary:
-            self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast}}]}}')
+            self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast, Rotation:[{yaw}f, 0f]}}]}}')
         else:
-            self.host.sendCommand(f'chat /summon Ghast {x} {y} {z}')
+            self.host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
+
+    def getGhastsAndFireballs(self, world_state):
+        if world_state.number_of_observations_since_last_state == 0:
+            return [], []
+        obvsText = world_state.observations[-1].text
+        data = json.loads(obvsText)
+        if 'entities' not in data:
+            return [], []
+        ghasts = []
+        fireballs = []
+        for entity in data['entities']:
+            if entity['name'] == 'Ghast':
+                ghasts.append(entity)
+            elif entity['name'] == 'Fireball':
+                fireballs.append(entity)
+        return ghasts, fireballs
 
 if __name__ == '__main__':
     # Create default Malmo objects
