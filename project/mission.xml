@@ -28,6 +28,9 @@
         <AgentHandlers>
             <DiscreteMovementCommands/>
             <ChatCommands/>
+            <ObservationFromNearbyEntities>
+                <Range name="entities" xrange="40" yrange="40" zrange="40"/>
+            </ObservationFromNearbyEntities>
         </AgentHandlers>
     </AgentSection>
 </Mission>

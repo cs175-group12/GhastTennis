@@ -4,6 +4,7 @@ import MalmoPython
 import os
 import sys
 import time
+import json
 import functools
 print = functools.partial(print, flush=True)
 
@@ -52,7 +53,9 @@ class Agent:
         self.summonGhast(0, 10, 0)
 
     def takeAction(self, world_state):
-        pass
+        ghasts, fireballs = self.getGhastsAndFireballs(world_state)
+        print('Ghasts:', ghasts)
+        print('Fireballs:', fireballs)
 
     def makeInvincible(self):
         self.host.sendCommand('chat /effect @p 11 10000 255 True')
@@ -62,6 +65,22 @@ class Agent:
             self.host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast}}]}}')
         else:
             self.host.sendCommand(f'chat /summon Ghast {x} {y} {z}')
+
+    def getGhastsAndFireballs(self, world_state):
+        if world_state.number_of_observations_since_last_state == 0:
+            return [], []
+        obvsText = world_state.observations[-1].text
+        data = json.loads(obvsText)
+        if 'entities' not in data:
+            return [], []
+        ghasts = []
+        fireballs = []
+        for entity in data['entities']:
+            if entity['name'] == 'Ghast':
+                ghasts.append(entity)
+            elif entity['name'] == 'Fireball':
+                fireballs.append(entity)
+        return ghasts, fireballs
 
 if __name__ == '__main__':
     # Create default Malmo objects
