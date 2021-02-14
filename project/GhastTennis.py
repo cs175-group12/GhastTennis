@@ -18,12 +18,14 @@ class Agent(gym.Env):
         # Static parameters
         self.obs_size = 3
         self.max_episode_steps = 100
+        # TODO add continuous actions for yaw and pitch
         self.action_dict = {
             0: 'attack 0',
             1: 'attack 1'  
         }
 
         # Rllib parameters
+        # TODO make action space continuous
         self.action_space = Discrete(len(self.action_dict))
         self.observation_space = Box(-100, 100, shape=(2 * self.obs_size * self.obs_size, ), dtype=np.float32)
 
@@ -114,6 +116,18 @@ class Agent(gym.Env):
         return world_state
 
     def step(self, action):
+        """
+        Take an action in the environment and return the results.
+
+        Args
+            action: <int> index of the action to take
+
+        Returns
+            observation: <np.array> flattened array of obseravtion
+            reward: <int> reward from taking action
+            done: <bool> indicates terminal state
+            info: <dict> dictionary of extra information
+        """
         # Get Action
         command = self.action_dict[action]
         self.agent_host.sendCommand(command)
@@ -164,6 +178,7 @@ class Agent(gym.Env):
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
         obs = np.zeros((2 * self.obs_size * self.obs_size, ))
             
+        # TODO edit to work with multiple ghasts
         if (len(ghasts) != 0):
             obs[0] = ghasts[0]["x"]
             obs[1] = ghasts[0]["y"]
