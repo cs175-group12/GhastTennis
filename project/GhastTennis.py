@@ -72,42 +72,6 @@ class Agent(gym.Env):
 
         return self.obs
 
-    # def start(self, mission, mission_record):
-    #     # Start mission
-    #     try:
-    #         self.host.startMission(mission, mission_record)
-    #     except RuntimeError as e:
-    #         print('Error starting mission', e)
-    #         exit(1)
-
-    #     # Wait for mission to start
-    #     print("Waiting for the mission to start ", end=' ')
-    #     world_state = self.host.getWorldState()
-    #     while not world_state.has_mission_begun:
-    #         print(".", end="")
-    #         time.sleep(0.1)
-    #         world_state = self.host.getWorldState()
-    #         for error in world_state.errors:
-    #             print("Error:",error.text)
-
-    #     # Initialize mission
-    #     print()
-    #     print("Mission running ", end=' ')
-    #     self.initialize()
-
-    #     # Take action
-    #     while world_state.is_mission_running:
-    #         print(".", end="")
-    #         time.sleep(0.1)
-    #         world_state = agent_host.getWorldState()
-    #         self.takeAction(world_state)
-    #         for error in world_state.errors:
-    #             print("Error:",error.text)
-
-    #     # End mission
-    #     print()
-    #     print("Mission ended")
-
     def init_malmo(self):
         """
         Initialize new malmo mission.
@@ -172,7 +136,7 @@ class Agent(gym.Env):
             print("killed ghasts")
             self.agent_host.sendCommand('quit')
             reward += 15 
-        # reward += self.takeAction(world_state)
+
         if self.obs[8] < 0: # fireball redirect
             reward += 1
         reward -= self.damage_taken
@@ -199,8 +163,6 @@ class Agent(gym.Env):
         """     
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
         obs = np.zeros((2 * self.obs_size * self.obs_size, ))
-        # obs = obs.reshape((2, self.obs_size, self.obs_size))
-        # obs = obs.flatten()
             
         if (len(ghasts) != 0):
             obs[0] = ghasts[0]["x"]
@@ -229,19 +191,6 @@ class Agent(gym.Env):
         self.summonGhast(0, 3, -20)
         time.sleep(1)
 
-    # def takeAction(self, world_state):
-    #     # ghasts, fireballs = self.getGhastsAndFireballs(world_state)
-    #     # print('Ghasts:', ghasts)
-    #     # print('Fireballs:', fireballs)
-    #     # obs = self.get_observation(world_state)
-
-
-    #     # End mission if all the ghasts are dead.
-    #     if self.num_ghasts == 0:
-    #         self.agent_host.sendCommand('quit')
-    #         return 10 # Reward 10 for killing ghast
-    #     return 0
-
     def cleanWorld(self):
         self.agent_host.sendCommand('chat /entitydata @e[type=Ghast] {DeathLootTable:"minecraft:empty"}')
         time.sleep(0.1)
@@ -257,6 +206,7 @@ class Agent(gym.Env):
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
 
     def getGhastsAndFireballs(self, world_state):
+        ''' checks world state for fireballs and ghasts and adds them into seperate lists '''
         if world_state.number_of_observations_since_last_state == 0:
             return [], []
         obvsText = world_state.observations[-1].text
@@ -271,6 +221,7 @@ class Agent(gym.Env):
             elif entity['name'] == 'Fireball':
                 fireballs.append(entity)
             elif entity['name'] == "GhastTennis Agent":
+                # check if agent took damage (for negative rewards)
                 life = entity['life']
                 print("Life: {}".format(life))
                 print("self life {}".format(self.life))
@@ -281,35 +232,13 @@ class Agent(gym.Env):
                 else:
                     self.life = life
                     self.damage_taken = 0
+
+        # Keep track of number of ghasts and fireballs 
         self.num_ghasts = len(ghasts)
         self.num_fireballs = len(fireballs)
         return ghasts, fireballs
 
 if __name__ == '__main__':
-    # Create default Malmo objects
-    # agent_host = MalmoPython.AgentHost()
-    # try:
-    #     agent_host.parse(sys.argv)
-    # except RuntimeError as e:
-    #     print('ERROR:',e)
-    #     print(agent_host.getUsage())
-    #     exit(1)
-    # if agent_host.receivedArgument("help"):
-    #     print(agent_host.getUsage())
-    #     exit(0)
-
-    # # Setup mission
-    # mission_file = './mission.xml'
-    # with open(mission_file, 'r') as f:
-    #     print("Loading mission from %s" % mission_file)
-    #     mission_xml = f.read()
-    #     mission = MalmoPython.MissionSpec(mission_xml, True)
-    # mission_record = MalmoPython.MissionRecordSpec()
-
-    # # Create agent
-    # agent = Agent(agent_host)
-    # agent.start(mission, mission_record)
-
     ray.init()
     trainer = ppo.PPOTrainer(env=Agent, config={
         'env_config': {},           # No environment parameters to configure
