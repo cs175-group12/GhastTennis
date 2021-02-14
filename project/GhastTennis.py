@@ -26,8 +26,7 @@ class Agent(gym.Env):
         }
 
         # Rllib parameters
-        # TODO make action space continuous
-        self.action_space = Discrete(len(self.action_dict))
+        self.action_space = Box(-1, 1, shape=(2, ), dtype=np.float32) # index 0 for attack 1 for turn
         self.observation_space = Box(-100, 100, shape=(2 * self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo Parameters
@@ -52,7 +51,6 @@ class Agent(gym.Env):
     def reset(self):
         """
         Resets the environment for the next episode.
-
         Returns
             observation: <np.array> flattened initial obseravtion
         """
@@ -119,10 +117,8 @@ class Agent(gym.Env):
     def step(self, action):
         """
         Take an action in the environment and return the results.
-
         Args
             action: <int> index of the action to take
-
         Returns
             observation: <np.array> flattened array of obseravtion
             reward: <int> reward from taking action
@@ -130,8 +126,11 @@ class Agent(gym.Env):
             info: <dict> dictionary of extra information
         """
         # Get Action
-        command = self.action_dict[action]
-        self.agent_host.sendCommand(command)
+        turn = "turn {}".format(action[1])
+        attack = "attack {}".format(1 if action[0] > 0 else 0) 
+
+        self.agent_host.sendCommand(turn)
+        self.agent_host.sendCommand(attack)
         time.sleep(0.2)
         self.episode_step += 1  
         # print(self.episode_step)
@@ -169,10 +168,8 @@ class Agent(gym.Env):
         """
         Use the agent observation API to get a flattened 2 x 5 x 5 grid around the agent. 
         The agent is in the center square facing up.
-
         Args
             world_state: <object> current agent world state
-
         Returns
             observation: <np.array> the state observation
         """     
