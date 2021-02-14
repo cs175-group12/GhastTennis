@@ -6,6 +6,7 @@ import sys
 import time
 import json
 import numpy as np
+import random
 import functools
 print = functools.partial(print, flush=True)
 
@@ -203,7 +204,7 @@ class Agent(gym.Env):
         self.cleanWorld()
         # self.makeInvincible()
         time.sleep(0.1)
-        self.summonGhast(0, 3, -20)
+        self.summonGhast(random.randint(-10, 10), 3, -20)
         time.sleep(1)
 
     def cleanWorld(self):
