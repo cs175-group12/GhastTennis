@@ -54,6 +54,7 @@ class Agent(gym.Env):
         self.yaw = 180
         self.x = 0.5
         self.z = 0.5
+        self.fireballs = []
 
     def reset(self):
         """
@@ -77,6 +78,7 @@ class Agent(gym.Env):
         self.yaw = 180
         self.x = 0.5
         self.z = 0.5
+        self.fireballs = []
 
         # Log
         if len(self.returns) > self.log_frequency + 1 and \
@@ -151,6 +153,8 @@ class Agent(gym.Env):
         else:
             turn = "turn {}".format(action[1])
         self.agent_host.sendCommand(turn)
+        # time.sleep(0.2)
+        # self.agent_host.sendCommand("turn 0")
         self.agent_host.sendCommand(attack)
         time.sleep(0.2)
         self.episode_step += 1  
@@ -171,25 +175,29 @@ class Agent(gym.Env):
             # self.summonGhast(random.randint(-10, 10), 3, -20) # summon new ghast
             # self.num_ghasts += 1
             # print("killed ghasts")
-            reward += 40 
+            reward += 10 
+            done = True
             self.agent_host.sendCommand('quit')
             
         if self.obs[8] < 0: # fireball redirect
-            reward += 1
+            reward += 0.25
             dist = self.calc_distance(self.obs[0], self.obs[2], self.obs[3], self.obs[5])
-            if dist < 2: # fireball close to ghast
-                print("fireball is close to ghast")
-                reward += 1
+            if dist < 10: # fireball close to ghast
+                # print("fireball is close to ghast")
+                reward += 0.5
 
-        if self.damage_taken != 0: # damage was taken
-            reward -= 1
+        # if self.damage_taken != 0: # damage was taken
+        #     reward -= 1
+        # print(self.fireballs)
+        if done:
+            reward -= len(self.fireballs) # negative reward for amount of fireballs that missed
+            # print("episode_return {}".format(self.episode_return))
         # for r in world_state.rewards:
         #     reward += r.getValue()
 
-        print("reward: {}".format(reward))
+        # print("reward: {}".format(reward))
         self.episode_return += reward
-        print("episode_return {}".format(self.episode_return))
-
+        
         return self.obs, reward, done, dict()
 
     def get_observation(self, world_state):
@@ -224,7 +232,7 @@ class Agent(gym.Env):
         
         # obs[9] = self.yaw # add agent's yaw to obs
 
-        print(obs)
+        # print(obs)
 
         return obs
 
@@ -257,7 +265,7 @@ class Agent(gym.Env):
     def initialize(self):
         print("initializing")
         self.cleanWorld()
-        # self.makeInvincible()
+        self.makeInvincible()
         time.sleep(0.1)
         self.summonGhast(random.randint(-10, 10), 3, -20)
         time.sleep(1)
@@ -291,17 +299,17 @@ class Agent(gym.Env):
                 ghasts.append(entity)
             elif entity['name'] == 'Fireball':
                 fireballs.append(entity)
+                if entity['id'] not in self.fireballs: 
+                    self.fireballs.append(entity['id']) # keep track of new fireballs 
             elif entity['name'] == "GhastTennis Agent":
                 # check if agent took damage (for negative rewards)
                 life = entity['life']
-                print("Life: {}".format(life))
-                print("self life {}".format(self.life))
                 self.yaw = entity["yaw"]
                 self.x = entity["x"]
                 self.z = entity["z"]
                 if life < self.life:
                     self.damage_taken = self.life - life
-                    print("Damage Taken: {}".format(self.damage_taken))
+                    # print("Damage Taken: {}".format(self.damage_taken))
                     self.life = entity['life']
                 else:
                     self.life = life
