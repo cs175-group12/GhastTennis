@@ -5,9 +5,11 @@ import os
 import sys
 import time
 import json
+import matplotlib.pyplot as plt
 import numpy as np
 import random
 import functools
+import math  
 print = functools.partial(print, flush=True)
 
 import gym, ray
@@ -19,15 +21,17 @@ class Agent(gym.Env):
         # Static parameters
         self.obs_size = 3
         self.max_episode_steps = 100
-        # TODO add continuous actions for yaw and pitch
+        self.log_frequency = 1
         self.action_dict = {
             0: 'attack 0',
             1: 'attack 1'  
         }
+        self.max_yaw = 220 # range of agent's turning
+        self.min_yaw = 150
 
         # Rllib parameters
         self.action_space = Box(-1, 1, shape=(2, ), dtype=np.float32) # index 0 for attack 1 for turn
-        self.observation_space = Box(-100, 100, shape=(2 * self.obs_size * self.obs_size, ), dtype=np.float32)
+        self.observation_space = Box(-1000, 1000, shape=(4 * self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo Parameters
         self.agent_host = MalmoPython.AgentHost()
@@ -47,6 +51,9 @@ class Agent(gym.Env):
         self.num_fireballs = 0
         self.life = 20
         self.damage_taken = 0
+        self.yaw = 180
+        self.x = 0.5
+        self.z = 0.5
 
     def reset(self):
         """
@@ -67,6 +74,14 @@ class Agent(gym.Env):
         self.num_fireballs = 0
         self.life = 20
         self.damage_taken = 0
+        self.yaw = 180
+        self.x = 0.5
+        self.z = 0.5
+
+        # Log
+        if len(self.returns) > self.log_frequency + 1 and \
+            len(self.returns) % self.log_frequency == 0:
+            self.log_returns()
 
         # Get Observation
         self.obs = self.get_observation(world_state)
@@ -126,9 +141,15 @@ class Agent(gym.Env):
             info: <dict> dictionary of extra information
         """
         # Get Action
-        turn = "turn {}".format(action[1])
         attack = "attack {}".format(1 if action[0] > 0 else 0) 
 
+        # limit range of turning
+        if self.yaw < self.min_yaw and action[1] < 0:
+            turn = "turn 0"
+        elif self.yaw > self.max_yaw and action[1] > 0:
+            turn = "turn 0"
+        else:
+            turn = "turn {}".format(action[1])
         self.agent_host.sendCommand(turn)
         self.agent_host.sendCommand(attack)
         time.sleep(0.2)
@@ -147,13 +168,21 @@ class Agent(gym.Env):
         # Get Reward
         reward = 0
         if self.num_ghasts == 0: # killed all ghasts
-            print("killed ghasts")
+            # self.summonGhast(random.randint(-10, 10), 3, -20) # summon new ghast
+            # self.num_ghasts += 1
+            # print("killed ghasts")
+            reward += 40 
             self.agent_host.sendCommand('quit')
-            reward += 15 
-
+            
         if self.obs[8] < 0: # fireball redirect
             reward += 1
-        reward -= self.damage_taken
+            dist = self.calc_distance(self.obs[0], self.obs[2], self.obs[3], self.obs[5])
+            if dist < 2: # fireball close to ghast
+                print("fireball is close to ghast")
+                reward += 1
+
+        if self.damage_taken != 0: # damage was taken
+            reward -= 1
         # for r in world_state.rewards:
         #     reward += r.getValue()
 
@@ -174,7 +203,7 @@ class Agent(gym.Env):
             observation: <np.array> the state observation
         """     
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
-        obs = np.zeros((2 * self.obs_size * self.obs_size, ))
+        obs = np.zeros((4 * self.obs_size * self.obs_size, ))
             
         # TODO edit to work with multiple ghasts
         if (len(ghasts) != 0):
@@ -189,12 +218,41 @@ class Agent(gym.Env):
             obs[6] = fireballs[0]["motionX"]
             obs[7] = fireballs[0]["motionY"]
             obs[8] = fireballs[0]["motionZ"]
+        obs[9] = self.yaw
+        obs[10] = self.x
+        obs[11] = self.z
+        
+        # obs[9] = self.yaw # add agent's yaw to obs
 
         print(obs)
 
         return obs
 
+    def log_returns(self):
+        """
+        Log the current returns as a graph and text file
+
+        Args:
+            steps (list): list of global steps after each episode
+            returns (list): list of total return of each episode
+        """
+        box = np.ones(self.log_frequency) / self.log_frequency
+        returns_smooth = np.convolve(self.returns[1:], box, mode='same')
+        plt.clf()
+        plt.plot(self.steps[1:], returns_smooth)
+        plt.title('GhastTennis Agent')
+        plt.ylabel('Return')
+        plt.xlabel('Steps')
+        plt.savefig('returns.png')
+
+        with open('returns.txt', 'w') as f:
+            for step, value in zip(self.steps[1:], self.returns[1:]):
+                f.write("{}\t{}\n".format(step, value)) 
+
         # ------------------------------------------------------------------------------------
+
+    def calc_distance(self, x1, z1, x2, z2):
+        return math.sqrt(((x2 - x1) ** 2) + ((z2 - z1) ** 2))
 
     def initialize(self):
         print("initializing")
@@ -238,6 +296,9 @@ class Agent(gym.Env):
                 life = entity['life']
                 print("Life: {}".format(life))
                 print("self life {}".format(self.life))
+                self.yaw = entity["yaw"]
+                self.x = entity["x"]
+                self.z = entity["z"]
                 if life < self.life:
                     self.damage_taken = self.life - life
                     print("Damage Taken: {}".format(self.damage_taken))
