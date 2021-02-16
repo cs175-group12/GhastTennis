@@ -5,7 +5,7 @@ title:  Status Report
 
 ## Video Summary
 
-<iframe class="youtube" height="300" src="https://www.youtube.com/embed/rtuoWLXzSug&feature=youtu.be" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/rtuoWLXzSug" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Project Summary
 
@@ -37,7 +37,7 @@ The mission ends when the agent is successful at killing the ghast or if 30 seco
 
 ### Neural Network Implementation
 
-<iframe class="youtube" height="300" src="https://youtu.be/embed/KMJIm6vTn3o" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KMJIm6vTn3o" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
 Our original plan was to use a Q-learning algorithm but we also had an interest in learning about neural networks so we decided to pursue both in parallel. One of our team members started his research on Youtube and Reddit and began implementing his own neural network from scratch - using only numpy, and pyplot to display debugging information. We wanted something generalizable and simple to use, read, and understand. Another potential merit of doing this instead of simply using RLlib or something similar inside of malmo is that since - in our case - our agent is solving a task that can be simply simulated in code, we could train it in real time as opposed to waiting .05s for each minecraft update to be delivered. We could get much more training done in a much shorter amount of time. It took our team member about a week to get a network that successfully predicted and learned, but initially only achieved 43% accuracy on written number recognition using the MNIST dataset (10% baseline).  He then decided to move from Jupyter Notebooks to normal Python files so that he could use a debugger and rewrote the code.
