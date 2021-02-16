@@ -21,9 +21,35 @@ The agent is rewarded when it is able to redirect a fireball. It is given a high
 
 The mission ends when the agent is successful at killing the ghast or if 30 seconds has passed since the beginning of the mission.
 
+### Neural Network Implementation
+Our original plan was to use a q learning algorithm but we also had an interest in learning about neural networks so we decided to pursue both in parallel. I started my research on youtube and reddit and began implementing my own neural network from scratch - using only numpy, and pyplot to display debugging information. I wanted something generalizable and simple to use,read, and understand. Another potential merit of doing this instead of simply using rllib or something similar inside of malmo is that since- in our case- our agent is solving a task that can be simply simulated in code, we could train it in real time as opposed to waiting .05s for each minecraft update to be delivered, we could get much more training done in a much shorter amount of time.  It took me about a week to get a network that successfully predicted and learned, but initially only achieved 43% accuracy on written number recognition using the mnist dataset (10% baseline).  I then decided to move from jupyter notebooks to normal python files so that I could use a debugger and rewrote the code.
+
+My initial neural network used a leaky relU activation function, a 784 by 200 by 10 topology, and a softmax activation function for the output layer. It suffered issues from nan propagation so that required fixing early on. Since then I’ve performed the following experiments and changes to improve its accuracy from 43% to 86%, or 90% when trained on the full dataset as opposed to just 10% of it. 
+
+- Random starting values between 0 and 1 vs between -(1/layersize) to +(1/layersize) to simply 1 make no difference on accuracy or training speed, but starting with 1s makes debugging easier. 
+- Random bias values initialized to 0 instead - aids debugging but no change to accuracy.
+- Leaky Rel U changed to sigmoid  - increased accuracy from 43% to 53%
+- Softmax changed to sigmoid and topology reduced to 784 by 10 - increased accuracy from 57% to 86%
+- Changing error to be softmax(error) when feedback to backpropagation took my initial build with a softmax activation function on the final layer better - 53% to 57% - but likewise feeding back the sigmoid of the error has the opposite effect on the new version, taking it from 86% to 79%. 
+- Decreasing the learning rate geometrically after each “epoch” , or loop over the same training data, has between a -1% to 1% effect on accuracy.
+
+Increasing the complexity of the network beyond 2 layers currently renders it inaccurate, and the ABS(SUM( x )) function on the total change to the weight matrices, which I’ve called axons here, shows a straight line, indicating that learning is not occurring. This may be a bug in my backpropagation code for deeper networks but I’m unsure. 
+
+At this point I think I’m going to move on to pytorch now, as the basic python implementation has served its purpose of teaching me how to create and debug neural networks. I’ve created a heavily commented and short class to demonstrate its functionality, and even a large drawing explaining how it works to aid understanding. I’ll also use it to test out changes in an easy to read and debug setting. 
+
+From here I need to create a neural network that implements an evolution algorithm instead of gradient descent, so that it can be trained using reinforcement learning. 
+
 ## Evaluation
 ### Quantitative
 While there isn’t noticeable improvement in the beginning of training (figure 1), our quantitative evaluation shows that there is slight improvement with our agent after a couple hours of training as shown in this graph (figure 2).
+
+![](assets/images/returns_2.png)
+#### (figure 1)
+
+![](assets/images/returns_status.png)
+#### (figure 2)
+
+
 
 ### Qualitative
 Though the quantitative results don’t show much improvement, after watching the agent we can see noticeable improvement that the agent accuracy improves in terms of hitting more fireballs, and hitting ghasts more often than its initial training (shown in the demo video). 
