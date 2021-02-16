@@ -31,7 +31,7 @@ class Agent(gym.Env):
 
         # Rllib parameters
         self.action_space = Box(-1, 1, shape=(2, ), dtype=np.float32) # index 0 for attack 1 for turn
-        self.observation_space = Box(-1000, 1000, shape=(4 * self.obs_size * self.obs_size, ), dtype=np.float32)
+        self.observation_space = Box(-5000.0, 5000.0, shape=(4 * self.obs_size * self.obs_size, ), dtype=np.float32)
 
         # Malmo Parameters
         self.agent_host = MalmoPython.AgentHost()
@@ -180,11 +180,11 @@ class Agent(gym.Env):
             self.agent_host.sendCommand('quit')
             
         if self.obs[8] < 0: # fireball redirect
-            reward += 0.25
+            reward += 0.5
             dist = self.calc_distance(self.obs[0], self.obs[2], self.obs[3], self.obs[5])
             if dist < 10: # fireball close to ghast
                 # print("fireball is close to ghast")
-                reward += 0.5
+                reward += 0.75
 
         # if self.damage_taken != 0: # damage was taken
         #     reward -= 1
