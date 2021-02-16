@@ -1,3 +1,8 @@
+---
+layout: default
+title:  Status Report
+---
+
 # Project Summary
 
 In Minecraft, ghasts are large flying mobs that can shoot fireballs at the player. The player can deflect the fireball by hitting it with the correct timing. Here is a video on how it works:
