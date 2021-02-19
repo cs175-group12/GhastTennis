@@ -3,6 +3,10 @@ layout: default
 title:  Status Report
 ---
 
+## Video Summary
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/rtuoWLXzSug" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 ## Project Summary
 
 In Minecraft, ghasts are large flying mobs that can shoot fireballs at the player. The player can deflect the fireball by hitting it with the correct timing. Here is a video on how it works:
@@ -32,6 +36,9 @@ The agent is rewarded when it is able to redirect a fireball. It is given a high
 The mission ends when the agent is successful at killing the ghast or if 30 seconds has passed since the beginning of the mission.
 
 ### Neural Network Implementation
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KMJIm6vTn3o" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 
 Our original plan was to use a Q-learning algorithm but we also had an interest in learning about neural networks so we decided to pursue both in parallel. One of our team members started his research on Youtube and Reddit and began implementing his own neural network from scratch - using only numpy, and pyplot to display debugging information. We wanted something generalizable and simple to use, read, and understand. Another potential merit of doing this instead of simply using RLlib or something similar inside of malmo is that since - in our case - our agent is solving a task that can be simply simulated in code, we could train it in real time as opposed to waiting .05s for each minecraft update to be delivered. We could get much more training done in a much shorter amount of time. It took our team member about a week to get a network that successfully predicted and learned, but initially only achieved 43% accuracy on written number recognition using the MNIST dataset (10% baseline).  He then decided to move from Jupyter Notebooks to normal Python files so that he could use a debugger and rewrote the code.
 
@@ -64,6 +71,13 @@ While there isn’t noticeable improvement in the beginning of training (figure 
 ### Qualitative
 
 Though the quantitative results don’t show much improvement, after watching the agent we can see noticeable improvement that the agent accuracy improves in terms of hitting more fireballs, and hitting ghasts more often than its initial training (shown in the demo video).
+
+![](assets/images/returns_2.png)
+#### (figure 1)
+
+![](assets/images/returns_status.png)
+#### (figure 2)
+
 
 ## Remaining Goals and Challenges
 
