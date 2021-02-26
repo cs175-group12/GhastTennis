@@ -34,8 +34,10 @@ class NetworkV2:
             self.neurons.append(np.zeros( (1,layersizes[i]) ))
             #self.biases.append( np.random.rand(1,layersizes[i])/ (self.layersizes[i]) )        #commented for parity with video
             self.biases.append(np.zeros((1,layersizes[i])))
+            #self.biases.append(np.random.rand(1,layersizes[i])/layersizes[i])
             if(i>0):
                 self.axons.append(np.ones( (self.layersizes[i-1],self.layersizes[i]) ) / (self.layersizes[i-1]) )
+                #self.axons.append(np.random.rand( self.layersizes[i-1],self.layersizes[i] ) / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) negative-positive range start vals
                 self.debuginfo["axon deltas"][i-1] = list()
         #debug ifo
         print("layersizes length %d" %(len(layersizes)))
@@ -63,8 +65,8 @@ class NetworkV2:
             axonupdate = np.transpose(-self.learningrate * (depth**2) * self.neurons[i-1]) @ self.neurons[i]
             self.debuginfo["axon deltas"][i-1].append(np.sum(np.abs(axonupdate)))
             self.axons[i-1] += axonupdate               #nk km nm  so Trans(neurons[i-1] ) @ neurons[i] 
-            self.biases[i] += -self.learningrate * (depth**2) * self.neurons[i]                                                  #update biases
-            deriv  = LeakyRelUDeriv(self.neurons[i-1])                                                  #get derivative of this layer of neurons  after inverting sigmoid
+            self.biases[i] += -self.learningrate * (depth**2) * self.neurons[i]                                     #update biases
+            deriv  = LeakyRelUDeriv(self.neurons[i-1])                                                              #get derivative of this layer of neurons  after inverting sigmoid
             self.neurons[i-1] = deriv * (self.neurons[i] @ np.transpose(self.axons[i-1]))                           #backpropagate errors into previous layer
             
             self.axons[i-1] = np.nan_to_num(self.axons[i-1], posinf=10, neginf=-10)                                 #get rid of weird values.
@@ -83,7 +85,7 @@ class NetworkV2:
             self.debuginfo["learning rate"] = list()
 
         for e in range(epochs):
-            self.learningrate/=1.5
+            #self.learningrate/=1.5
             for i in range(vals.shape[0]):
                 if i%100 == 0:
                     print("\rTraining started. %2.0f %% done."%(float(i + e*vals.shape[0])/float(vals.shape[0]*epochs) * 100), end='\r')
@@ -92,7 +94,7 @@ class NetworkV2:
                 p = self.predict(vals[i])
                 correct = np.zeros((1,self.layersizes[-1]))
                 correct[0,labels[i]] = 1
-                #correct = Softmax(correct)                 commented for parity with video
+                #correct = LeakyRelU(correct)                 #used to make softmax more effective, now makes it worse.
                 err = p - correct                        
                 #err = np.nan_to_num(err, posinf=10, neginf=-10)            commented for parity with video
                 self.backpropagate(err)
@@ -123,8 +125,8 @@ def main():
     #np.copyto(test, [0,.2,.62,1.0,.62])
     #network2.axons[0] = np.transpose (np.reshape( np.asarray( [.05,.22,.1,.04,-.08,.15,-.06,.39,.46,-.12,.29,.03,.07,.43,-.43,-.41,-.48,.33,8.66,.37] ) , (4,5)))
     #network2.axons[1] = np.transpose (np.reshape( np.asarray( [.48,.3,-.04,.28,-.38,.14,-.36,.44,.02,-.09,-.24,.27] ), (3,4)))
-    network2.train(mnimg[0:60000,:],mnlabel[0:60000], epochs=10, testvals=mnimg[11000:12000,:] , testlabels=mnlabel[11000:12000] )
-    network2.test(mnimg[11000:12000,:] , mnlabel[11000:12000])
+    network2.train(mnimg[0:2000,:],mnlabel[0:2000], epochs=3, testvals=mnimg[11000:12000,:] , testlabels=mnlabel[11000:12000] )
+    network2.test(mnimg[12000:13000,:] , mnlabel[12000:13000])
     pyplot.plot(network2.debuginfo["axon deltas"][0] , color= "red")
     pyplot.show()
     pyplot.plot(network2.debuginfo["learning rate"] , color= "blue")
