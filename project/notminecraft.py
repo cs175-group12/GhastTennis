@@ -21,6 +21,7 @@ a ghast fireball is 1x1
 '''
 
 import numpy as np
+import pyquaternion as pq #pip install pyquaternion if you dont have this
 
 deltaTime = .05
 
@@ -70,12 +71,45 @@ class world:
         self.idcounter+=1
         self.entities.append(entity)
 
+class transform:
+    def __init__(self):
+        self.position = np.zeros((1,3))
+        self.quaternion = pq.Quaternion()                                                              #quaternion identity
+        self.pitch = 0
+        self.yaw = 0
+        self.scale = np.ones((1,3))                                                         #scale identity
+        self.forward = np.asarray([0,0,1])
+
+    def get_position(self):
+        return self.position.copy()
+
+    def world_to_local(self, point):                                                        #transforms a point from world space to local
+        point -= self.position
+        #not doing scale
+        return self.quaternion.inverse.rotate(point)
+        
+    def translate(self, translation):
+        self.position += translation
+        return
+    
+    def rotate(self, dpitch, dyaw):                                                         #in minecraft, positive z is north, and 0 degrees faces north
+        self.pitch += dpitch                                                                     #in malmo, positive yaw goes right, negative left
+        self.yaw += dyaw                                                                         #in malmo , positive pitch goes down, negative up 
+        fwd = np.asarray([0,0,1])
+        yawq = pq.Quaternion( axis = [0,1,0] , degrees = -self.yaw )
+        leftq = pq.Quaternion( axis = [0,1,0], degrees = -self.yaw - 90)
+        left = leftq.rotate(fwd)
+        fwd = yawq.rotate(fwd)
+        pitchq = pq.Quaternion( axis = left , degrees = self.pitch)
+        fwd = pitchq.rotate(fwd)
+        self.forward = fwd
+        self.quaternion = pitchq* yawq                                    
+        return
+
+
 class entity:                                                                               #base class
     def __init__(self,world,id=-1,x=0,y=0,z=0):
-        self.transform = np.identity((4,4))
-        self.position = np.zeros((1,3))
-        self.quaternion = np.asarray([0,0,0,1])                                             #quaternion identity
-        self.scale = np.ones((1,3))                                                         #scale identity
+        self.transform = transform()
         self.radius = 1.0
         self.world = world
         self.id = id
@@ -100,7 +134,7 @@ class fireball(entity):
         return
 
     def update(self):
-        self.position += self.velocity * deltaTime
+        self.transform.position += self.velocity * deltaTime
         if(self.world.time - self.birthtime > self.lifetime):
             self.world.destroy(self)                                                                        #thank you garbage collector
 
