@@ -32,8 +32,8 @@ class world:
         self.idcounter = 1
         return
     
-    def observe(self):
-        return
+    def observe(self):                                                                      #return the closest ghast and fireball to the agent
+        return                                                                              #translated into the agents local space
 
     def update(self):
         self.update_world()
@@ -42,6 +42,7 @@ class world:
         return
     
     def update_world(self):
+        self.check_collisions()
         for e in self.entities :
             e.update()
         return
@@ -69,12 +70,12 @@ class world:
         self.idcounter+=1
         self.entities.append(entity)
 
-class entity:
+class entity:                                                                               #base class
     def __init__(self,world,id=-1,x=0,y=0,z=0):
         self.transform = np.identity((4,4))
         self.position = np.zeros((1,3))
-        self.quaternion = np.asarray([0,0,0,1]) #quaternion identity
-        self.scale = np.ones((1,3)) #scale identity
+        self.quaternion = np.asarray([0,0,0,1])                                             #quaternion identity
+        self.scale = np.ones((1,3))                                                         #scale identity
         self.radius = 1.0
         self.world = world
         self.id = id
@@ -101,12 +102,12 @@ class fireball(entity):
     def update(self):
         self.position += self.velocity * deltaTime
         if(self.world.time - self.birthtime > self.lifetime):
-            self.world.destroy(self)                                     #thank you garbage collector
+            self.world.destroy(self)                                                                        #thank you garbage collector
 
     def change_direction(self, newdir):
-        self.velocity = newdir/np.sum(newdir) * 20      #normalize for direction, new speed is 20 as it always is
+        self.velocity = newdir/np.sum(newdir) * 20                                                          #normalize for direction, new speed is 20 as it always is
 
-class ghast(entity):                        #sit there and be a target, add reward when hit
+class ghast(entity):                                                                                        #sit there and be a target, add reward when hit
     def start(self):
         self.radius = 2
         self.fireinterval = 2
@@ -115,17 +116,44 @@ class ghast(entity):                        #sit there and be a target, add rewa
     
     def update(self):
         if(self.world.time - self.lastfiretime > self.fireinterval):
-            direction = (self.world.player.position - self.position)/np.sum(self.world.player.position - self.position) #normalized direction
-            f = fireball(self.world,x=self.position[0,0] , y =self.position[0,1], z = self.position[0,2])
-            f.position += direction * 3
-            f.change_direction(direction)
-            self.world.spawn(f)
-            self.lastfiretime = self.world.time
+            direction = (self.world.player.position - self.position)/np.sum(self.world.player.position - self.position) #normalized direction from ghast to player
+            f = fireball(self.world,x=self.position[0,0] , y =self.position[0,1], z = self.position[0,2])               #create fireball at my position
+            f.position += direction * 3                                                                                 #offset it in shoot direction
+            f.change_direction(direction)                                                                               #tell it to go that way
+            self.world.spawn(f)                                                                                         #spawn it
+            self.lastfiretime = self.world.time                                                                         #update last fire time
 
-class agent(entity):
+class agent(entity):                                          #max turn speed is 180 deg per second, max walk speed is 4.317 meters per second
     def start(self):
         self.radius = .5
+        self.yaw = 0
+        self.pitch = 0
+        self.cmd = (0,0,0,0,0)
         return
+    
+    def set_AI(self, function):                               #give agent the function that recieves observations and makes a prediction 
+        self.function = function                              #agent returns its command function, which should be passed a command tuple
+
+    def update(self):
+        o = self.world.get_observation
+
+        #cmd tuple format (move amt, strafe amt, yaw amt {-1 to 1}, pitch amt{-1 to 1}, and atk (0=false, 1=true))
+        self.cmd = self.function(o)     
+
+
+
+        return
+
+    def turn(self,d_pitch, d_yaw):
+        return
+
+    def move(self,foward,right):
+        return
+
+    def attack(self):
+        return
+    
+
 
 #good gradient for training would be closeness to correct timing in hitting the fireball, closeness to correct angle to hit the ghast
 #another good bonus would just be proximity in aiming at either the fireball or the ghast
