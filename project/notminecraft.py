@@ -21,7 +21,7 @@ a ghast fireball is 1x1
 '''
 
 import numpy as np
-import pyquaternion as pq #pip install pyquaternion if you dont have this
+#import pyquaternion as pq #pip install pyquaternion if you dont have this
 import time
 import quaternionic as quat
 deltaTime = .05
@@ -56,7 +56,7 @@ class world:
         self.update()
 
     def update(self):
-        while(self.time < 1000):
+        while(self.time < 100):
             self.update_world()
             self.update_agent()
             self.time += deltaTime
@@ -99,7 +99,7 @@ class world:
 class transform:
     def __init__(self , xyz = (0,0,0)):
         self.position = np.asarray(xyz[0:3], dtype=np.float32)
-        self.quaternion = pq.Quaternion()                                                              #quaternion identity
+        self.quaternion = quat.array((1,0,0,0))                                                          #quaternion identity
         self.pitch = 0
         self.yaw = 0
         self.scale = np.ones((1,3) , dtype = np.float32)                                                         #scale identity
@@ -133,14 +133,21 @@ class transform:
         np.clip( self.pitch , -89, 89.0)                                                    #pitch is clamped between -90 and 90
         self.yaw += (360 if self.yaw < -.01 else 0) - (360 if self.yaw >= 360 else 0)           #yaw loops over
         fwd = np.asarray([0,0,1], dtype = np.float32)
+        
+        #old pyquaternion implementation
+        '''
         yawq = pq.Quaternion( axis = [0,1,0] , degrees = -self.yaw )
         leftq = pq.Quaternion( axis = [0,1,0], degrees = -self.yaw - 90)
         left = leftq.rotate(fwd)
         fwd = yawq.rotate(fwd)
         pitchq = pq.Quaternion( axis = left , degrees = self.pitch)
         fwd = pitchq.rotate(fwd)
-        self.forward = fwd
-        self.quaternion = pitchq* yawq                                    
+        '''
+        #new quaternionic implementation
+        q1 = quat.array.from_axis_angle((np.deg2rad(self.pitch),0,0)) # pitch
+        q2 = quat.array.from_axis_angle((0,np.deg2rad(self.yaw),0)) # yaw
+        self.quaternion = q2*q1
+        self.forward = self.quaternion.rotate(fwd)                        
         return
 
 
@@ -237,7 +244,7 @@ class agent(entity):                                          #max turn speed is
     def move(self,forward,right):
         forward = np.clip(forward,-1,1)
         right = np.clip(right,-1,1) #BUG you'll wind up walking too fast if you dont cap speed to 4.317 combined
-        yawq = pq.Quaternion( axis = [0,1,0] , degrees = -self.transform.yaw )
+        yawq = quat.array.from_axis_angle((0,np.deg2rad(self.transform.yaw),0)) # yaw
         self.transform.translate( yawq.rotate((right * 4.317 * deltaTime , 0 , forward * 4.317 * deltaTime) ))              #cant use a simple projection or youd move weird
         return
 
@@ -315,7 +322,7 @@ def test3():
     sekai.start()
 
 def testAI3(observations):
-    #print(observations[0])
+    print(observations[0])
     return(1,0,0,1,0)
 
 def test4():
@@ -329,13 +336,7 @@ def test4():
 
 if(__name__ == "__main__"):
     starttime = time.time()
-    #test4()
+    test4()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 
-    #testing quaternionic
-    a = np.asarray([1,0,0])
-    #q = quat.array([0,.707,0,-.707])
-    q = quat.array.from_euler_angles((0.0,np.deg2rad(90.0),0.0))
-    f = q.rotate(a)
-    print(f)
