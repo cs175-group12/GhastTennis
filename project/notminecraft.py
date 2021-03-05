@@ -26,17 +26,31 @@ import time
 import quaternionic as quat
 deltaTime = .05
 
+
+
+'''
+reward for : fireball hitting ghast (happens in on collision)
+player attacking : small negative
+player hitting fireball : moderate positive, increasing to a peak the closer to hitting the fireball only rewarding early not late
+facing towards ghast : tiny positive per frame, higher the closer
+facing towards fireball : tiny positive per frame, higher the closer
+'''
+
 class world: 
+    '''
+    u
+    '''
     def __init__(self):
         self.player = agent(self,0)
         self.entities = list()
         self.time = 0
         self.idcounter = 1
+        self.score = 0.0
         return
     
     def observe(self):                                                                      #return the closest ghast and fireball to the agent
-        closestFireball = None
-        closestGhast = None
+        self.closestFireball = None
+        self.closestGhast = None
         for e in self.entities:
             offset = e.transform.position - self.player.transform.position
             distanceToAgent = offset.dot(offset) #technically square but doesnt matter
@@ -45,12 +59,12 @@ class world:
             if type(e) is fireball:
                 if(distanceToAgent < df):
                     df = distanceToAgent
-                    closestFireball = e
+                    self.closestFireball = e
             elif type(e) is ghast:
                 if (distanceToAgent < dg):
                     dg = distanceToAgent
-                    closestGhast = e
-        return (closestGhast,closestFireball) #translated into the agents local space
+                    self.closestGhast = e
+        return (self.closestGhast,self.closestFireball) #translate into the agents local space
 
     def start(self):
         self.update()
@@ -59,6 +73,7 @@ class world:
         while(self.time < 100):
             self.update_world()
             self.update_agent()
+            self.update_rewards()
             self.time += deltaTime
             if(self.time > 2.65):
                 x = 3
@@ -73,6 +88,7 @@ class world:
     def update_agent(self):
         self.player.update()
         return
+
     
     def check_collisions(self):
         e = self.entities
@@ -85,7 +101,8 @@ class world:
     def raycast(self, ray): #may not be necessary
         return
 
-    def get_rewards(self):
+    def update_rewards(self):
+        self.reward_facing()
         return
 
     def destroy(self, entity):
@@ -96,7 +113,27 @@ class world:
         self.idcounter+=1
         self.entities.append(entity)
 
+    def reward_attack(self, hit : bool, direction, fireball):
+        self.score -= .1
+        if(hit):
+            self.score+=10.1
+
+    
+    def reward_facing(self):
+        fwd = self.player.transform.forward
+        pos = self.player.transform.position
+        ghastdir = (self.closestGhast.transform.position - pos)
+        ghastdir /= np.sqrt(ghastdir.dot(ghastdir))
+        fireballdir= (self.closestFireball.transform.position - pos)
+        fireballdir/= np.sqrt(fireballdir.dot(fireballdir))
+        self.score += (fwd.dot(ghastdir)**2 + fwd.dot(fireballdir)**2)*.05
+        return
+
+    def reward_fireballxghast(self):
+        self.score += 10 
+
 class transform:
+    '''The transform is a component of every entity that represents its position, rotation, and scale in space'''
     def __init__(self , xyz = (0,0,0)):
         self.position = np.asarray(xyz[0:3], dtype=np.float32)
         self.quaternion = quat.array((1,0,0,0))                                                          #quaternion identity
@@ -143,7 +180,7 @@ class transform:
         pitchq = pq.Quaternion( axis = left , degrees = self.pitch)
         fwd = pitchq.rotate(fwd)
         '''
-        #new quaternionic implementation
+        #new quaternionic implementation, twice as fast
         q1 = quat.array.from_axis_angle((np.deg2rad(self.pitch),0,0)) # pitch
         q2 = quat.array.from_axis_angle((0,np.deg2rad(self.yaw),0)) # yaw
         self.quaternion = q2*q1
@@ -152,6 +189,8 @@ class transform:
 
 
 class entity:                                                                               #base class
+    '''an entity is an actor within the world, that has its update function called every "frame" by the world.
+    start is used to extend its functionality so that init doesnt have to be rewritten'''
     def __init__(self,world,id=-1, xyz = (0,0,0)):
         self.transform = transform(xyz)
         self.radius = 1.0
@@ -170,6 +209,7 @@ class entity:                                                                   
         return
 
 class fireball(entity):
+    '''the fireball is spawned by ghasts, and moves in a fixed direction until it is hit by the player or times out'''
     def start(self):
         self.velocity = np.asarray([0.0,0.0,1.0])
         self.radius = .5
@@ -186,6 +226,7 @@ class fireball(entity):
         self.velocity = newdir/np.sqrt(newdir.dot(newdir)) * 20                                                  #normalize for direction, new speed is 20 as it always is
 
 class ghast(entity):                                                                                        #sit there and be a target, add reward when hit
+    '''ghasts spawn and stay still, firing a fireball at the player every 2 seconds'''
     def start(self):
         self.radius = 2
         self.fireinterval = 2
@@ -201,8 +242,21 @@ class ghast(entity):                                                            
             f.change_direction(direction)                                                                               #tell it to go that way
             self.world.spawn(f)                                                                                         #spawn it
             self.lastfiretime = self.world.time                                                                         #update last fire time
+    
+    def on_collision(self, other):
+        if(other.type == fireball):
+            self.world.reward_fireballxghast()
+            #also, randomize ghast position now relative to player. anything above them and within 30 blocks works. 
+            #also set last fire time to 2 seconds ago.
+            offset = np.random.random_sample((3)) * 60 - 30
+            offset[1] = np.abs(offset[1])
+            self.transform.position = self.world.player.transform.position + offset
+            self.lastfiretime = self.world.time - 1.95
+        return
 
 class agent(entity):                                          #max turn speed is 180 deg per second, max walk speed is 4.317 meters per second
+    '''the agent is created by the world. think of this as
+    the malmo wrapper for minecraft. call its set_ai function to dictate how it behaves.'''
     def start(self):
         self.radius = .5
         self.yaw = 0
@@ -252,11 +306,14 @@ class agent(entity):                                          #max turn speed is
 
     def attack(self):
         fireball = self.observation[1]
+        hit = False
         if(fireball != None):
             #secant line test
             if(SphereLineIntersect(self.transform.position, self.transform.position + self.transform.forward*2.5 , fireball.transform.position, fireball.radius)):
                 fireball.change_direction(self.transform.forward)
+                hit = True
                 print("Fireball HIT!")
+        self.world.reward_attack(hit,self.transform.forward, fireball)
         return
 
 def testAI(observations):
