@@ -242,10 +242,12 @@ class agent(entity):                                          #max turn speed is
         return
 
     def move(self,forward,right):
-        forward = np.clip(forward,-1,1)
-        right = np.clip(right,-1,1) #BUG you'll wind up walking too fast if you dont cap speed to 4.317 combined
+        forward = np.clip(forward,-1.0,1.0)
+        right = np.clip(right,-1.0,1.0) #BUG you'll wind up walking too fast if you dont cap speed to 4.317 combined
+        dir = np.asarray([right,0,forward] , dtype=np.float32)
+        dir *= 4.317*deltaTime*np.sqrt(dir.dot(dir))/(2**1.5)  #normalize movement direction , adjust speed to be at most 4.317
         yawq = quat.array.from_axis_angle((0,np.deg2rad(self.transform.yaw),0)) # yaw
-        self.transform.translate( yawq.rotate((right * 4.317 * deltaTime , 0 , forward * 4.317 * deltaTime) ))              #cant use a simple projection or youd move weird
+        self.transform.translate( yawq.rotate(dir))              #cant use a simple projection or youd move weird
         return
 
     def attack(self):
@@ -322,7 +324,7 @@ def test3():
     sekai.start()
 
 def testAI3(observations):
-    print(observations[0])
+    #print(observations[0])
     return(1,0,0,1,0)
 
 def test4():
