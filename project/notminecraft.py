@@ -22,7 +22,8 @@ a ghast fireball is 1x1
 
 import numpy as np
 import pyquaternion as pq #pip install pyquaternion if you dont have this
-
+import time
+import quaternionic as quat
 deltaTime = .05
 
 class world: 
@@ -55,7 +56,7 @@ class world:
         self.update()
 
     def update(self):
-        while(self.time < 10):
+        while(self.time < 1000):
             self.update_world()
             self.update_agent()
             self.time += deltaTime
@@ -314,8 +315,8 @@ def test3():
     sekai.start()
 
 def testAI3(observations):
-    print(observations[0])
-    return(0,0,0,1,0)
+    #print(observations[0])
+    return(1,0,0,1,0)
 
 def test4():
     sekai = world()
@@ -327,4 +328,14 @@ def test4():
     sekai.start()
 
 if(__name__ == "__main__"):
-    test4()
+    starttime = time.time()
+    #test4()
+    elapsedtime = time.time()-starttime
+    print("End time is " , elapsedtime)
+
+    #testing quaternionic
+    a = np.asarray([1,0,0])
+    #q = quat.array([0,.707,0,-.707])
+    q = quat.array.from_euler_angles((0.0,np.deg2rad(90.0),0.0))
+    f = q.rotate(a)
+    print(f)
