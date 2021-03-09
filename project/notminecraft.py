@@ -151,7 +151,17 @@ class world:
         return
 
     def reward_fireballxghast(self):
-        self.score += 100 
+        self.score += 100
+
+    def prepare_pickling(self):
+        self.player.transform.quaternion = np.asarray(self.player.transform.quaternion)
+        for e in self.entities:
+            e.transform.quaternion = np.asarray(e.transform.quaternion)
+
+    def prepare_unpickle(self):
+        self.player.transform.quaternion = quat.array(self.player.transform.quaternion)
+        for e in self.entities:
+            e.transform.quaternion = quat.array(e.transform.quaternion)
 
 class transform:
     '''The transform is a component of every entity that represents its position, rotation, and scale in space'''
