@@ -15,7 +15,8 @@ def LeakyRelU(input): #maybe dont use this? More of a demonstration of what shou
     return expit(input)     #apparently this is faster
     #return  np.nan_to_num(    np.clip(  ((input < 0) & (1)) * .99 * input + .01 * input , a_min=-10, a_max=10  ) )
     
-    
+def Sigmoid(input):
+    return expit(input)
 
 def LeakyRelUDeriv(input):
     #return .01 if input < 0 else 1
@@ -116,6 +117,73 @@ class NetworkV2:
         if printout:
             print("Test Complete. %d out of %d correct." %(numcorrect, total))
         return float(numcorrect)/total
+
+import copy
+
+#todo : do biases
+class NetworkV3:
+    #previously axons were size (input,output) and input was a row vector. output computed as input*axons + biases
+    #now for performance we flip everything. axons are (output,input) input is a column vector, output computed as axons*input
+    #nk km nm   11 input 10 output  10,11   11, 1   10,1
+    def __init__(self, layersizes, learningrate = .01):
+        self.neurons = list()           #list of row vectors
+        self.axons = list()             #matrix connect neurons[i] to neurons[i+1]. dimension is layersizes[i] , layersizes[i+1]
+        self.layersizes = layersizes    #the count of neurons in each layer
+        self.biases = list()            #bonus connection to each neuron in each layer. same shape as self.neurons
+        for i in range(len(layersizes)):
+            self.neurons.append(np.zeros( (layersizes[i],1) ))
+            self.biases.append(np.random.rand(layersizes[i],1)/layersizes[i])
+            if(i>0):
+                self.axons.append(np.random.rand( self.layersizes[i],self.layersizes[i-1] ) / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) 
+        return
+
+    def reproduce(self):
+        child = NetworkV3([])
+        child.neurons = copy.deepcopy(self.neurons)
+        child.axons = copy.deepcopy(self.axons)
+        child.layersizes = copy.deepcopy(self.layersizes)
+        child.biases = copy.deepcopy(self.biases)
+        return child
+
+    def mutate(self, rate):
+        #types of mutations : small change (1%), medium change (5%), big change (15%)
+        for i in range(len(self.axons)):
+            delta = np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1])
+            delta =  (delta < rate/2) / -self.axons[i].shape[1] + (delta > 1.0-rate/2) / self.axons[i].shape[1]
+            self.axons[i] += delta  
+
+    def predict(self, input):
+        '''
+        def predict(self, input):
+        input should be a numpy array of shape inputsize,1 . remember to normalize input to 0-1 range
+        '''
+        np.copyto(self.neurons[0], input)
+        for i in range(1,len(self.layersizes)):
+            self.neurons[i] = Sigmoid(  self.axons[i-1] @ self.neurons[i-1] + self.biases[i])       #nk km nm
+        return np.copy(self.neurons[-1])
+    
+    def save(self,r : int):
+        for i in range(1,len(self.layersizes)):
+            np.savetxt("biases%d_%d.csv"%(r,i) , self.biases[i])
+            np.savetxt("weights%d_%d.csv"%(r,i), self.axons[i-1])
+
+
+    
+    #basic flow of program
+    #create a list of tuples of world , network pairs
+    #run all the worlds
+    #sort the list by the world scores
+    #remove the bottom 128
+    #x = 65, for i to x reproduce network, mutate, x/=2
+    #store highscore and continue
+
+
+
+
+
+
+
+
 
 def main():
     mnimg = mnist.train_images().reshape(60000,28**2)/256.0 + 1.0/256.0

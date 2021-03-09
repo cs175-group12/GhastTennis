@@ -36,6 +36,8 @@ facing towards ghast : tiny positive per frame, higher the closer
 facing towards fireball : tiny positive per frame, higher the closer
 '''
 
+#requires testing : reset, attacking the fireball
+
 class world: 
     '''
     u
@@ -46,6 +48,8 @@ class world:
         self.time = 0
         self.idcounter = 1
         self.score = 0.0
+        g = ghast(self, xyz= (0,10,10) )
+        self.spawn(g)
         return
     
     def observe(self):                                                                      #return the closest ghast and fireball to the agent
@@ -70,7 +74,7 @@ class world:
         self.update()
 
     def update(self):
-        while(self.time < 100):
+        while(self.time < 30):
             self.update_world()
             self.update_agent()
             self.update_rewards()
@@ -78,6 +82,17 @@ class world:
             if(self.time > 2.65):
                 x = 3
         return
+    
+    def reset(self):
+        self.time = 0
+        self.idcounter = 1
+        self.score = 0.0
+        self.player.reset()
+        self.closestFireball=None
+        self.closestGhast=None
+        self.entities.clear()
+        g = ghast(self, xyz=(0,10,10))
+        self.spawn(g)
     
     def update_world(self):
         self.check_collisions()
@@ -107,19 +122,25 @@ class world:
 
     def destroy(self, entity):
         self.entities.remove(entity)
+        if(entity == self.closestGhast):
+            self.closestGhast = None
+        if(entity == self.closestFireball):
+            self.closestFireball = None
 
     def spawn(self,entity):
         entity.id = self.idcounter
         self.idcounter+=1
         self.entities.append(entity)
 
-    def reward_attack(self, hit : bool, direction, fireball):
+    def reward_attack(self, hit : bool, direction, fireball): #fireball may be none
         self.score -= .1
         if(hit):
             self.score+=10.1
 
     
     def reward_facing(self):
+        if(self.closestFireball == None or self.closestGhast == None):
+            return
         fwd = self.player.transform.forward
         pos = self.player.transform.position
         ghastdir = (self.closestGhast.transform.position - pos)
@@ -244,7 +265,7 @@ class ghast(entity):                                                            
             self.lastfiretime = self.world.time                                                                         #update last fire time
     
     def on_collision(self, other):
-        if(other.type == fireball):
+        if(type(other) == fireball):
             self.world.reward_fireballxghast()
             #also, randomize ghast position now relative to player. anything above them and within 30 blocks works. 
             #also set last fire time to 2 seconds ago.
@@ -266,18 +287,30 @@ class agent(entity):                                          #max turn speed is
         self.observation = 0
         return
     
+    def reset(self):
+        self.radius = .5
+        self.yaw = 0
+        self.pitch = 0
+        #cmd tuple format (move amt, strafe amt , pitch amt{-1 to 1}, yaw amt {-1 to 1}, and atk (0=false, 1=true))
+        self.cmd = (0,0,0,0,0)
+        self.observation = 0
+        self.observationdata = None
+        self.transform = transform()
+    
     def set_AI(self, function):                               #give agent the function that recieves observations and makes a prediction 
         self.brain = function                              #agent returns its command function, which should be passed a command tuple
 
     def update(self):
-        ghast,fireball = self.world.observe() #flesh this out with agent information
+        ghast,fireball = self.observation = self.world.observe() #flesh this out with agent information
         
         if(ghast==None or fireball == None): #if either are missing do nothing
             return
 
-        self.observation= (self.transform.world_to_local(ghast.transform.position), self.transform.world_to_local(fireball.transform.position), self.transform.world_to_local(fireball.velocity,direction=True))
+        self.observationData = (self.transform.world_to_local(ghast.transform.position), self.transform.world_to_local(fireball.transform.position), self.transform.world_to_local(fireball.velocity,direction=True))
 
-        self.cmd = self.brain(self.observation)     
+        self.observationData = np.array(self.observationData).reshape((9,1)) #make sure this works later
+
+        self.cmd = self.brain(self.observationData)     
 
         self.turn(self.cmd[2], self.cmd[3])
 
@@ -305,15 +338,16 @@ class agent(entity):                                          #max turn speed is
         return
 
     def attack(self):
-        fireball = self.observation[1]
-        hit = False
-        if(fireball != None):
+        
+        if(self.observation[1] is not None):
+            fireball = self.observation[1]
+            hit = False
             #secant line test
             if(SphereLineIntersect(self.transform.position, self.transform.position + self.transform.forward*2.5 , fireball.transform.position, fireball.radius)):
-                fireball.change_direction(self.transform.forward)
+                self.observation[1].change_direction(self.transform.forward)
                 hit = True
-                print("Fireball HIT!")
-        self.world.reward_attack(hit,self.transform.forward, fireball)
+                #print("Fireball HIT!") things are hitting really often??
+            self.world.reward_attack(hit,self.transform.forward, fireball)
         return
 
 def testAI(observations):
@@ -323,11 +357,14 @@ def testAI(observations):
 def SphereLineIntersect(pointA, pointB, center, radius):
     # [-b +- sqrt ( b**2 -4*a*c) ]/2a
     #polynomial is [ sum{(ac)**2}- r**2]  + sum{2*bau*ac} + sum{bau**2}
-    c = np.sum( (pointA-center)**2 ) - radius**2
-    b = np.sum(2*(pointB-pointA)*(pointA-center))
-    a = np.sum((pointB-pointA)**2) 
-    sol1 = (-b + np.sqrt(b**2 - 4*a*c))/ (2*a)
-    sol2 = (-b - np.sqrt(b**2 - 4*a*c))/ (2*a)
+    try:
+        c = np.sum( (pointA-center)**2 ) - radius**2
+        b = np.sum(2*(pointB-pointA)*(pointA-center))
+        a = np.sum((pointB-pointA)**2) 
+        sol1 = (-b + np.sqrt(b**2 - 4*a*c))/ (2*a)
+        sol2 = (-b - np.sqrt(b**2 - 4*a*c))/ (2*a)
+    except RuntimeWarning:
+        return False #imaginary square root means no valid collision
     # #for debugging
     # x = pointA + (pointB-pointA)*sol1 - center
     # y = (pointB-pointA ) * sol1 
@@ -387,8 +424,7 @@ def testAI3(observations):
 def test4():
     sekai = world()
     sekai.player.set_AI(testAI3)
-    f = fireball(sekai, xyz= (0,10,0))
-    sekai.spawn(f)
+
     g = ghast(sekai, xyz= (0,10,10) )
     sekai.spawn(g)
     sekai.start()
