@@ -151,7 +151,7 @@ class world:
         return
 
     def reward_fireballxghast(self):
-        self.score += 10 
+        self.score += 100 
 
 class transform:
     '''The transform is a component of every entity that represents its position, rotation, and scale in space'''

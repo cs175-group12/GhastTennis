@@ -189,18 +189,14 @@ def main():
     mnimg = mnist.train_images().reshape(60000,28**2)/256.0 + 1.0/256.0
     mnlabel = mnist.train_labels()
     network2 = NetworkV2([28**2,10], learningrate =.02)
-    #test=np.zeros((1,5))
-    #np.copyto(test, [0,.2,.62,1.0,.62])
-    #network2.axons[0] = np.transpose (np.reshape( np.asarray( [.05,.22,.1,.04,-.08,.15,-.06,.39,.46,-.12,.29,.03,.07,.43,-.43,-.41,-.48,.33,8.66,.37] ) , (4,5)))
-    #network2.axons[1] = np.transpose (np.reshape( np.asarray( [.48,.3,-.04,.28,-.38,.14,-.36,.44,.02,-.09,-.24,.27] ), (3,4)))
     network2.train(mnimg[0:2000,:],mnlabel[0:2000], epochs=3, testvals=mnimg[11000:12000,:] , testlabels=mnlabel[11000:12000] )
     network2.test(mnimg[12000:13000,:] , mnlabel[12000:13000])
     pyplot.plot(network2.debuginfo["axon deltas"][0] , color= "red")
     pyplot.show()
     pyplot.plot(network2.debuginfo["learning rate"] , color= "blue")
     pyplot.show()
-    #pyplot.plot(network2.debuginfo["axon deltas"][1], color = "green")
     return
+
 
 
 
