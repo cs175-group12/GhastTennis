@@ -36,7 +36,8 @@ facing towards ghast : tiny positive per frame, higher the closer
 facing towards fireball : tiny positive per frame, higher the closer
 '''
 
-#requires testing : reset, attacking the fireball
+#requires testing : reset, attacking the fireball - done
+#requires feature : fireball dies when it hits hte player
 
 class world: 
     '''
@@ -71,6 +72,7 @@ class world:
         return (self.closestGhast,self.closestFireball) #translate into the agents local space
 
     def start(self):
+        np.random.seed(int(time.time_ns()%2**32-1))
         self.update()
 
     def update(self):
@@ -91,7 +93,7 @@ class world:
         self.closestFireball=None
         self.closestGhast=None
         self.entities.clear()
-        g = ghast(self, xyz=(0,10,10))
+        g = ghast(self, xyz=(0,10,-10))
         self.spawn(g)
     
     def update_world(self):
@@ -135,7 +137,7 @@ class world:
     def reward_attack(self, hit : bool, direction, fireball): #fireball may be none
         self.score -= .1
         if(hit):
-            self.score+=10.1
+            self.score+= 5
 
     
     def reward_facing(self):
@@ -151,7 +153,7 @@ class world:
         return
 
     def reward_fireballxghast(self):
-        self.score += 100
+        self.score += 50
 
     def prepare_pickling(self):
         self.player.transform.quaternion = np.asarray(self.player.transform.quaternion)
@@ -326,7 +328,7 @@ class agent(entity):                                          #max turn speed is
 
         self.move(self.cmd[0], self.cmd[1])
 
-        if(self.cmd[4] != 0):
+        if(self.cmd[4] > .5):
             self.attack()
         
         #print("Time is ", self.world.time)
@@ -354,7 +356,7 @@ class agent(entity):                                          #max turn speed is
             hit = False
             #secant line test
             if(SphereLineIntersect(self.transform.position, self.transform.position + self.transform.forward*2.5 , fireball.transform.position, fireball.radius)):
-                self.observation[1].change_direction(self.transform.forward)
+                fireball.change_direction(self.transform.forward)
                 hit = True
                 #print("Fireball HIT!") things are hitting really often??
             self.world.reward_attack(hit,self.transform.forward, fireball)
@@ -439,9 +441,30 @@ def test4():
     sekai.spawn(g)
     sekai.start()
 
+#for sphere line intersect. works !
+def test5():
+    grid = np.zeros( (10,10,3) )
+    for i in range(10):
+        for j in range(10):
+            grid[i,j,0] = float(i)/10.0 - .5
+            grid[i,j,1] = 1
+            grid[i,j,2] = float(j)/10.0 - .5
+    ray = np.asarray([0,-9,0])
+    center= np.asarray([0,0,0])
+    radius = .5
+    screen = []
+    for i in range(10):
+        screen.append([])
+        for j in range(10):
+            screen[i].append(SphereLineIntersect(grid[i,j,:],grid[i,j,:] + ray, center, radius ))
+    for i in range(10):
+        print(list(map( lambda b: b*1, screen[i]) ))
+    
+
+
 if(__name__ == "__main__"):
     starttime = time.time()
-    test4()
+    test5()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 

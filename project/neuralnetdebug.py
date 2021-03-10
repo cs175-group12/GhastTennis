@@ -162,11 +162,38 @@ class NetworkV3:
             self.neurons[i] = Sigmoid(  self.axons[i-1] @ self.neurons[i-1] + self.biases[i])       #nk km nm
         return np.copy(self.neurons[-1])
     
-    def save(self,r : int):
+    def savetxt(self,r : int):
         for i in range(1,len(self.layersizes)):
             np.savetxt("biases%d_%d.csv"%(r,i) , self.biases[i])
             np.savetxt("weights%d_%d.csv"%(r,i), self.axons[i-1])
+    
+    def save(self,r : int):
+        #use npy later
+        self.savetxt(r)
 
+
+
+    def loadtxt(self,r:int):
+        biases = []
+        weights = []
+        try:
+            for i in range(1,10):
+                biases.append(np.loadtxt("biases%d_%d.csv"%(r,i) , dtype=np.float32))
+                weights.append(np.loadtxt("weights%d_%d.csv"%(r,i), dtype=np.float32))        
+        except OSError:
+            pass
+        self.biases= biases
+        self.axons = weights
+        self.layersizes = [9]
+        self.neurons.clear()
+        self.neurons.append(np.zeros((9,1)))
+        for i in range(len(self.biases)):
+            self.layersizes.append(len(self.biases[i]))
+            self.neurons.append(np.zeros((len(self.biases[i]),1)))
+
+            
+        
+        
 
     
     #basic flow of program
@@ -186,17 +213,19 @@ class NetworkV3:
 
 
 def main():
-    mnimg = mnist.train_images().reshape(60000,28**2)/256.0 + 1.0/256.0
-    mnlabel = mnist.train_labels()
-    network2 = NetworkV2([28**2,10], learningrate =.02)
-    network2.train(mnimg[0:2000,:],mnlabel[0:2000], epochs=3, testvals=mnimg[11000:12000,:] , testlabels=mnlabel[11000:12000] )
-    network2.test(mnimg[12000:13000,:] , mnlabel[12000:13000])
-    pyplot.plot(network2.debuginfo["axon deltas"][0] , color= "red")
-    pyplot.show()
-    pyplot.plot(network2.debuginfo["learning rate"] , color= "blue")
-    pyplot.show()
-    return
-
+    # mnimg = mnist.train_images().reshape(60000,28**2)/256.0 + 1.0/256.0
+    # mnlabel = mnist.train_labels()
+    # network2 = NetworkV2([28**2,10], learningrate =.02)
+    # network2.train(mnimg[0:2000,:],mnlabel[0:2000], epochs=3, testvals=mnimg[11000:12000,:] , testlabels=mnlabel[11000:12000] )
+    # network2.test(mnimg[12000:13000,:] , mnlabel[12000:13000])
+    # pyplot.plot(network2.debuginfo["axon deltas"][0] , color= "red")
+    # pyplot.show()
+    # pyplot.plot(network2.debuginfo["learning rate"] , color= "blue")
+    # pyplot.show()
+    # return
+    x = NetworkV3([1])
+    x.loadtxt(0)
+    x.mutate()
 
 
 
