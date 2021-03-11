@@ -1,20 +1,16 @@
-from __future__ import print_function
-from builtins import range
 import MalmoPython
-import os
 import sys
 import time
 import json
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-import functools
-import math  
-print = functools.partial(print, flush=True)
-
+import math
 import gym, ray
-from gym.spaces import Discrete, Box
+from gym.spaces import Box
 from ray.rllib.agents import ppo
+import functools
+print = functools.partial(print, flush=True)
 
 class Agent(gym.Env):
     def __init__(self, env_config):
@@ -24,7 +20,7 @@ class Agent(gym.Env):
         self.log_frequency = 1
         self.action_dict = {
             0: 'attack 0',
-            1: 'attack 1'  
+            1: 'attack 1'
         }
         self.max_yaw = 220 # range of agent's turning
         self.min_yaw = 150
@@ -62,10 +58,11 @@ class Agent(gym.Env):
         Returns
             observation: <np.array> flattened initial obseravtion
         """
-        # Reset Malmo
+
+        # Reset Malmo.
         world_state = self.init_malmo()
 
-        # Reset Variables
+        # Reset variables.
         self.returns.append(self.episode_return)
         current_step = self.steps[-1] if len(self.steps) > 0 else 0
         self.steps.append(current_step + self.episode_step)
@@ -80,40 +77,38 @@ class Agent(gym.Env):
         self.z = 0.5
         self.fireballs = []
 
-        # Log
+        # Log last episode.
         if len(self.returns) > self.log_frequency + 1 and \
             len(self.returns) % self.log_frequency == 0:
             self.log_returns()
 
-        # Get Observation
+        # Get observation.
         self.obs = self.get_observation(world_state)
 
         return self.obs
 
     def init_malmo(self):
         """
-        Initialize new malmo mission.
+        Initialize new Malmo mission.
         """
-        # Setup mission
+
+        # Load the XML file and create mission spec & record.
         mission_file = './mission.xml'
         with open(mission_file, 'r') as f:
             print("Loading mission from %s" % mission_file)
             mission_xml = f.read()
-            mission = MalmoPython.MissionSpec(mission_xml, True)
-        mission_record = MalmoPython.MissionRecordSpec()
+            my_mission = MalmoPython.MissionSpec(mission_xml, True)
+            my_mission_record = MalmoPython.MissionRecordSpec()
+            my_mission.requestVideo(800, 500)
+            my_mission.setViewpoint(1)
 
-        my_mission = MalmoPython.MissionSpec(mission_xml, True)
-        my_mission_record = MalmoPython.MissionRecordSpec()
-        my_mission.requestVideo(800, 500)
-        my_mission.setViewpoint(1)
-
+        # Attempt to start Malmo.
         max_retries = 3
         my_clients = MalmoPython.ClientPool()
         my_clients.add(MalmoPython.ClientInfo('127.0.0.1', 10000)) # add Minecraft machines here as available
-
         for retry in range(max_retries):
             try:
-                self.agent_host.startMission( my_mission, my_clients, my_mission_record, 0, 'Agent' )
+                self.agent_host.startMission(my_mission, my_clients, my_mission_record, 0, 'Agent')
                 break
             except RuntimeError as e:
                 if retry == max_retries - 1:
@@ -122,6 +117,7 @@ class Agent(gym.Env):
                 else:
                     time.sleep(2)
 
+        # Start the world.
         world_state = self.agent_host.getWorldState()
         while not world_state.has_mission_begun:
             time.sleep(0.1)
@@ -142,84 +138,73 @@ class Agent(gym.Env):
             done: <bool> indicates terminal state
             info: <dict> dictionary of extra information
         """
-        # Get Action
-        attack = "attack {}".format(1 if action[0] > 0 else 0) 
 
-        # limit range of turning
-        if self.yaw < self.min_yaw and action[1] < 0:
-            turn = "turn 0"
-        elif self.yaw > self.max_yaw and action[1] > 0:
+        # Get attack action.
+        attack = f"attack {1 if action[0] > 0 else 0}"
+
+        # Limit range of turning.
+        if (self.yaw < self.min_yaw and action[1] < 0) or (self.yaw > self.max_yaw and action[1] > 0):
             turn = "turn 0"
         else:
             turn = "turn {}".format(action[1])
         self.agent_host.sendCommand(turn)
-        # time.sleep(0.2)
-        # self.agent_host.sendCommand("turn 0")
         self.agent_host.sendCommand(attack)
         time.sleep(0.2)
-        self.episode_step += 1  
-        # print(self.episode_step)
+        self.episode_step += 1
 
-        # Get Observation
+        # Get observation.
         world_state = self.agent_host.getWorldState()
         for error in world_state.errors:
             print("Error:", error.text)
-        self.obs = self.get_observation(world_state) 
+        self.obs = self.get_observation(world_state)
 
-        # Get Done
-        done = not world_state.is_mission_running 
-        
-        # Get Reward
+        # Check reward.
+        done = not world_state.is_mission_running
         reward = 0
-        if self.num_ghasts == 0: # killed all ghasts
-            # self.summonGhast(random.randint(-10, 10), 3, -20) # summon new ghast
-            # self.num_ghasts += 1
-            # print("killed ghasts")
-            reward += 10 
+        if self.num_ghasts == 0: # Killed all ghasts.
+            reward += 10
             done = True
             self.agent_host.sendCommand('quit')
-            
-        if self.obs[8] < 0: # fireball redirect
+        if self.obs[8] < 0: # Fireball redirect.
             reward += 0.5
             dist = self.calc_distance(self.obs[0], self.obs[2], self.obs[3], self.obs[5])
-            if dist < 10: # fireball close to ghast
-                # print("fireball is close to ghast")
+            if dist < 10: # Fireball close to ghast.
                 reward += 0.75
-
-        # if self.damage_taken != 0: # damage was taken
+        # if self.damage_taken != 0: # Damage was taken.
         #     reward -= 1
         # print(self.fireballs)
+
         if done:
-            reward -= len(self.fireballs) # negative reward for amount of fireballs that missed
+            reward -= len(self.fireballs) # Negative reward for amount of fireballs that missed
             # print("episode_return {}".format(self.episode_return))
         # for r in world_state.rewards:
         #     reward += r.getValue()
 
         # print("reward: {}".format(reward))
         self.episode_return += reward
-        
+
         return self.obs, reward, done, dict()
 
     def get_observation(self, world_state):
-        # to simplify problem, only feeding x y z position of ghast fireball as observations
         """
-        Use the agent observation API to get a flattened 2 x 5 x 5 grid around the agent. 
+        Use the agent observation API to get a flattened 2 x 5 x 5 grid around the agent.
         The agent is in the center square facing up.
         Args
             world_state: <object> current agent world state
         Returns
             observation: <np.array> the state observation
-        """     
+        """
+
+        # to simplify problem, only feeding x y z position of ghast fireball as observations
         ghasts, fireballs = self.getGhastsAndFireballs(world_state)
         obs = np.zeros((4 * self.obs_size * self.obs_size, ))
-            
+
         # TODO edit to work with multiple ghasts
-        if (len(ghasts) != 0):
+        if len(ghasts) != 0:
             obs[0] = ghasts[0]["x"]
             obs[1] = ghasts[0]["y"]
             obs[2] = ghasts[0]["z"]
-        if (len(fireballs) != 0):
-            # print("motionX: {}, motionY: {}, motionZ: {}".format(fireballs[0]["motionX"], fireballs[0]["motionY"], fireballs[0]["motionZ"]))
+        if len(fireballs) != 0:
             obs[3] = fireballs[0]["x"]
             obs[4] = fireballs[0]["y"]
             obs[5] = fireballs[0]["z"]
@@ -229,10 +214,6 @@ class Agent(gym.Env):
         obs[9] = self.yaw
         obs[10] = self.x
         obs[11] = self.z
-        
-        # obs[9] = self.yaw # add agent's yaw to obs
-
-        # print(obs)
 
         return obs
 
@@ -255,15 +236,13 @@ class Agent(gym.Env):
 
         with open('returns.txt', 'w') as f:
             for step, value in zip(self.steps[1:], self.returns[1:]):
-                f.write("{}\t{}\n".format(step, value)) 
-
-        # ------------------------------------------------------------------------------------
+                f.write("{}\t{}\n".format(step, value))
 
     def calc_distance(self, x1, z1, x2, z2):
         return math.sqrt(((x2 - x1) ** 2) + ((z2 - z1) ** 2))
 
     def initialize(self):
-        print("initializing")
+        print("Initializing...")
         self.cleanWorld()
         self.makeInvincible()
         time.sleep(0.1)
@@ -271,21 +250,37 @@ class Agent(gym.Env):
         time.sleep(1)
 
     def cleanWorld(self):
+        '''
+        Remove all entities that is not the agent.
+        '''
+
         self.agent_host.sendCommand('chat /entitydata @e[type=Ghast] {DeathLootTable:"minecraft:empty"}')
         time.sleep(0.1)
         self.agent_host.sendCommand('chat /kill @e[type=!Player]')
 
     def makeInvincible(self):
+        '''
+        Make the agent invincible by using potion.
+        '''
+
         self.agent_host.sendCommand('chat /effect @p 11 10000 255 True')
 
     def summonGhast(self, x, y, z, yaw=0, stationary=True):
+        '''
+        Summon a Ghast at specific coordinate.
+        If stationary, then the summoned Ghast will be inside a minecart.
+        '''
+
         if stationary:
             self.agent_host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast, Rotation:[{yaw}f, 0f]}}]}}')
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
 
     def getGhastsAndFireballs(self, world_state):
-        ''' checks world state for fireballs and ghasts and adds them into seperate lists '''
+        '''
+        Checks world state for fireballs and ghasts and adds them into seperate lists.
+        '''
+
         if world_state.number_of_observations_since_last_state == 0:
             return [], []
         obvsText = world_state.observations[-1].text
@@ -299,8 +294,8 @@ class Agent(gym.Env):
                 ghasts.append(entity)
             elif entity['name'] == 'Fireball':
                 fireballs.append(entity)
-                if entity['id'] not in self.fireballs: 
-                    self.fireballs.append(entity['id']) # keep track of new fireballs 
+                if entity['id'] not in self.fireballs:
+                    self.fireballs.append(entity['id']) # keep track of new fireballs
             elif entity['name'] == "GhastTennis Agent":
                 # check if agent took damage (for negative rewards)
                 life = entity['life']
@@ -315,7 +310,7 @@ class Agent(gym.Env):
                     self.life = life
                     self.damage_taken = 0
 
-        # Keep track of number of ghasts and fireballs 
+        # Keep track of number of ghasts and fireballs
         self.num_ghasts = len(ghasts)
         self.num_fireballs = len(fireballs)
         return ghasts, fireballs
