@@ -50,6 +50,7 @@ class world:
         self.idcounter = 1
         self.score = 0.0
         g = ghast(self, xyz= (0,10,10) )
+        g.teleport() #testing this out
         self.spawn(g)
         return
     
@@ -72,23 +73,21 @@ class world:
         return (self.closestGhast,self.closestFireball) #translate into the agents local space
 
     def start(self):
-        np.random.seed(int(time.time_ns()%2**32-1))
+        np.random.seed(int(time.time())% (2**31-1))
         self.update()
 
     def update(self):
-        while(self.time < 30):
+        while(self.time < 10): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
             self.time += deltaTime
-            if(self.time > 2.65):
-                x = 3
         return
     
-    def reset(self):
+    def reset(self, basescore=0):
         self.time = 0
         self.idcounter = 1
-        self.score = 0.0
+        self.score = basescore
         self.player.reset()
         self.closestFireball=None
         self.closestGhast=None
@@ -109,7 +108,13 @@ class world:
     
     def check_collisions(self):
         e = self.entities
+        for ent in e :
+            #check against player
+            if(np.sum((ent.transform.position - self.player.transform.position)**2) <= (ent.radius + self.player.radius)**2):
+                ent.on_collision(self.player)
+                self.player.on_collision(ent)
         for i in range(len(self.entities)):
+            #check against other entitites
             for j in range(0,i):
                 if ( np.sum((e[i].transform.position - e[j].transform.position)**2) <= (e[i].radius + e[j].radius)**2):             #simple collision check for spheres
                     e[i].on_collision(e[j])
@@ -139,6 +144,8 @@ class world:
         if(hit):
             self.score+= 5
 
+    def reward_explode(self):#player hit by fireball
+        return
     
     def reward_facing(self):
         if(self.closestFireball == None or self.closestGhast == None):
@@ -261,6 +268,7 @@ class fireball(entity):
 class ghast(entity):                                                                                        #sit there and be a target, add reward when hit
     '''ghasts spawn and stay still, firing a fireball at the player every 2 seconds'''
     def start(self):
+        #self.velocity = np.asarray([1.0,0.0,0.0])
         self.radius = 2
         self.fireinterval = 2
         self.lastfiretime = -2
@@ -281,11 +289,14 @@ class ghast(entity):                                                            
             self.world.reward_fireballxghast()
             #also, randomize ghast position now relative to player. anything above them and within 30 blocks works. 
             #also set last fire time to 2 seconds ago.
-            offset = np.random.random_sample((3)) * 60 - 30
-            offset[1] = np.abs(offset[1])
-            self.transform.position = self.world.player.transform.position + offset
+            self.teleport()
             self.lastfiretime = self.world.time - 1.95
         return
+    
+    def teleport(self):
+        offset = np.random.random_sample((3)) * 60 - 30
+        offset[1] = np.abs(offset[1])
+        self.transform.position = self.world.player.transform.position + offset
 
 class agent(entity):                                          #max turn speed is 180 deg per second, max walk speed is 4.317 meters per second
     '''the agent is created by the world. think of this as
@@ -354,13 +365,19 @@ class agent(entity):                                          #max turn speed is
         if(self.observation[1] is not None):
             fireball = self.observation[1]
             hit = False
-            #secant line test
-            if(SphereLineIntersect(self.transform.position, self.transform.position + self.transform.forward*2.5 , fireball.transform.position, fireball.radius)):
-                fireball.change_direction(self.transform.forward)
-                hit = True
+            #see if attack ray hit fireball
+            if(SphereLineIntersect(self.transform.position + self.transform.forward*fireball.radius, self.transform.position + self.transform.forward*2.5 , fireball.transform.position, fireball.radius)):
+                if(fireball.velocity.dot(self.transform.forward) < 0 ):
+                    fireball.change_direction(self.transform.forward)
+                    hit = True
                 #print("Fireball HIT!") things are hitting really often??
             self.world.reward_attack(hit,self.transform.forward, fireball)
         return
+    
+    def on_collision(self, other):
+        if(type(other) == fireball):
+            self.world.destroy(other) # fireballs blow up when they hit player
+            self.world.reward_explode()
 
 def testAI(observations):
     print(observations[1])
@@ -464,6 +481,7 @@ def test5():
 
 if(__name__ == "__main__"):
     starttime = time.time()
+    test4()
     test5()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)

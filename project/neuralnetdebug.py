@@ -184,8 +184,8 @@ class NetworkV3:
             pass
         self.biases= biases
         self.axons = weights
-        self.layersizes = [9]
-        self.neurons.clear()
+        self.layersizes = [9] # didnt save layersizes so im just assuming input it 9
+        self.neurons.clear() #technically i could get that from shape[1] of weights[0] tho
         self.neurons.append(np.zeros((9,1)))
         for i in range(len(self.biases)):
             self.layersizes.append(len(self.biases[i]))

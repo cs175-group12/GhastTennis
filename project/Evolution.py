@@ -26,10 +26,8 @@ def main():
 
     highscores = list()
     threads = 8
-    
     m = mp.Manager()
     Q = m.Queue()
-    
 
     #initialize random gen 1
     for i in range(population):
@@ -48,7 +46,6 @@ def main():
     for g in range(generations):
 
         #evaluate (can be threaded)
-        #run_worlds(0,population)
         
         with mp.Pool(processes=threads) as pool:
             pool.starmap(run_worlds,args)
@@ -63,17 +60,9 @@ def main():
         AIsAndWorlds.sort(key = lambda w : w[1].score)
         highscores.append(AIsAndWorlds[-1][1].score)
 
-
         natural_selection()
         #cut off bottom half
         #generating new ai can be multithreaded (also id like a different scheme for this)
-        # for i in range(int(population/4)):
-        #     AIsAndWorlds[i*2][0] = AIsAndWorlds[population-1-i][0].reproduce()
-        #     AIsAndWorlds[i*2+1][0] = AIsAndWorlds[population-1-i][0].reproduce()
-        #     AIsAndWorlds[i*2][0].mutate(.1) #pick a random number or something for this later
-        #     AIsAndWorlds[i*2+1][0].mutate(.1) #pick a random number or something for this later
-        #     AIsAndWorlds[i*2][1].player.set_AI(AIsAndWorlds[i*2][0].predict)
-        #     AIsAndWorlds[i*2+1][1].player.set_AI(AIsAndWorlds[i*2+1][0].predict)
         
         print(highscores[g])
     
@@ -105,10 +94,9 @@ reproductionScale = []
 for i in range(0,population):
     reproductionScale.append(int(np.floor(-np.log2( (population-i)/population )) -1))
 
+#with pop 128, 64 deleted, 16 are randomized, 16 mutate in place, the remainder reproduce according to the scale
+#Replace the worst half of the items with reproductions from the top quarter, using log2 distribution
 def natural_selection():
-    #with pop 128, 64 deleted, 16 are randomized, 16 mutate in place, the remainder reproduce according to the scale
-
-    #Replace the worst half of the items with reproductions from the top quarter, using log2 distribution
     i=0
     for k in range(population-1,-1,-1):
         if(reproductionScale[k] <1):
@@ -125,7 +113,14 @@ def natural_selection():
         AIsAndWorlds[k][0].mutate(np.random.rand(1)*.9)
     return
 
-
+def natural_selection_beta():
+    for i in range(int(population/4)):
+        AIsAndWorlds[i*2][0] = AIsAndWorlds[population-1-i][0].reproduce()
+        AIsAndWorlds[i*2+1][0] = AIsAndWorlds[population-1-i][0].reproduce()
+        AIsAndWorlds[i*2][0].mutate(.1) #pick a random number or something for this later
+        AIsAndWorlds[i*2+1][0].mutate(.1) #pick a random number or something for this later
+        AIsAndWorlds[i*2][1].player.set_AI(AIsAndWorlds[i*2][0].predict)
+        AIsAndWorlds[i*2+1][1].player.set_AI(AIsAndWorlds[i*2+1][0].predict)
     
 
 def run_worlds(a,b,Q : mp.Queue, AIsAndWorlds):
@@ -133,8 +128,10 @@ def run_worlds(a,b,Q : mp.Queue, AIsAndWorlds):
     for i in range(a,b):
         AIsAndWorlds[i][1].prepare_unpickle()
         AIsAndWorlds[i][1].player.set_AI(AIsAndWorlds[i][0].predict) 
-        AIsAndWorlds[i][1].reset()
-        AIsAndWorlds[i][1].start()
+        AIsAndWorlds[i][1].score =0
+        for o in range(3):
+            AIsAndWorlds[i][1].reset(basescore=AIsAndWorlds[i][1].score)
+            AIsAndWorlds[i][1].start()
         messages.append([i,AIsAndWorlds[i][1].score]) #for multiprocessing
     for i in range(len(messages)):
         Q.put(messages[i])
