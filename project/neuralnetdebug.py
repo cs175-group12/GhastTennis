@@ -145,11 +145,12 @@ class NetworkV3:
         child.biases = copy.deepcopy(self.biases)
         return child
 
-    def mutate(self, rate):
+    def mutate(self, rate, amount = 1):
         #types of mutations : small change (1%), medium change (5%), big change (15%)
         for i in range(len(self.axons)):
             delta = np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1])
-            delta =  (delta < rate/2) / -self.axons[i].shape[1] + (delta > 1.0-rate/2) / self.axons[i].shape[1]
+            gamma = (np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1]) -.5) * amount
+            delta = (delta < rate) / self.axons[i].shape[1]*gamma
             self.axons[i] += delta  
 
     def predict(self, input):

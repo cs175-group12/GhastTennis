@@ -73,7 +73,7 @@ class world:
         return (self.closestGhast,self.closestFireball) #translate into the agents local space
 
     def start(self):
-        np.random.seed(int(time.time())% (2**31-1))
+        #np.random.seed(int(time.time()))
         self.update()
 
     def update(self):
@@ -140,7 +140,7 @@ class world:
         self.entities.append(entity)
 
     def reward_attack(self, hit : bool, direction, fireball): #fireball may be none
-        self.score -= .1
+        #self.score -= .1
         if(hit):
             self.score+= 5
 

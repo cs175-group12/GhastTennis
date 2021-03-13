@@ -10,8 +10,9 @@ warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
 population = 16 #power of 2
+boom = 8    #large population will be 8x size of population
 generations = 200
-
+mutation_factor = 10
 AIsAndWorlds = list()
 
 #ideas for improvement : set a new random seed in reset each time, run 3 samples and average scores
@@ -19,13 +20,13 @@ AIsAndWorlds = list()
 #mix up mutation rate
 #ideally : huge first generation, like gargantuan, then trim it down to just the top 128 or so and balloon them all up
 #pretrain for 10 generations too
-#make the ghasts move significantly
-#have score be avg of n runs with randomized ghast position
-
+#maybe instead of log by placement just softmax
+#since score , against what I've been attempting to do, seems deterministic...
+    #technically I dont need to rerun the ones that have already run right?
 def main():
 
     highscores = list()
-    threads = 8
+    threads = 4
     m = mp.Manager()
     Q = m.Queue()
 
@@ -67,7 +68,7 @@ def main():
         print(highscores[g])
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
-    print(AIsAndWorlds[-1][0].save(7))
+    print(AIsAndWorlds[-1][0].save(8))
 
         
 
@@ -78,7 +79,7 @@ def main():
 
 def ReplaceAI(dest, src):
     AIsAndWorlds[dest][0] = AIsAndWorlds[src][0].reproduce()
-    AIsAndWorlds[dest][0].mutate(np.random.rand(1)*.9)
+    AIsAndWorlds[dest][0].mutate(np.random.rand(1)*.9, mutation_factor)
     AIsAndWorlds[dest][1].player.set_AI(AIsAndWorlds[dest][0].predict)
 
 def RandomizeAI(dest):
