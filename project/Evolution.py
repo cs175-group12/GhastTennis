@@ -22,7 +22,15 @@ AIsAndWorlds = list()
 #pretrain for 10 generations too
 #maybe instead of log by placement just softmax
 #since score , against what I've been attempting to do, seems deterministic...
-    #technically I dont need to rerun the ones that have already run right?
+#technically I dont need to rerun the ones that have already run right?
+
+'''how about this
+i maintain a "hall of fame" between generations. lets say size 128
+the first generation gets evaluated, sorted, and inserted into hall of fame
+
+wait in my current situation wouldn't that be the same as if only the bottom half of the 
+list got evaluated? or actually the bottom 3/4 need reevaluation
+'''
 def main():
 
     highscores = list()
@@ -42,7 +50,7 @@ def main():
     args = []
         
     for i in range(0, threads):
-        args.append([i*(int(population/threads)),i*(int(population/threads))+(int(population/threads)),Q,AIsAndWorlds])
+        args.append([i*(int(population/threads)),(i+1)*(int(population/threads)),Q,AIsAndWorlds])
 
     for g in range(generations):
 
@@ -50,6 +58,11 @@ def main():
         
         with mp.Pool(processes=threads) as pool:
             pool.starmap(run_worlds,args)
+        
+        if(g==1): #we dont need to reevaluate the top 1/4 each time, as they already have been evaluated
+            args.clear()
+            for i in range(0, threads):
+                args.append([i*(int(population/threads*3/4)),(i+1)*(int(population/threads*3/4)),Q,AIsAndWorlds])
 
 
         #new step from multiprocessing, unpack Q and assign scores
@@ -95,7 +108,7 @@ reproductionScale = []
 for i in range(0,population):
     reproductionScale.append(int(np.floor(-np.log2( (population-i)/population )) -1))
 
-#with pop 128, 64 deleted, 16 are randomized, 16 mutate in place, the remainder reproduce according to the scale
+#with pop 128, bottom 64 deleted, 16 are randomized, 16 mutate in place, the remainder reproduce according to the scale
 #Replace the worst half of the items with reproductions from the top quarter, using log2 distribution
 def natural_selection():
     i=0
