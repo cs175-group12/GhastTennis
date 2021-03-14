@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as pyplot
-import mnist
 from scipy.special import expit,logit
 #takes a numpy array of values and returns a numpy array of the same length. 
 def Softmax(inputs):

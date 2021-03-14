@@ -11,9 +11,9 @@ import math
 
 def main():
     #initialize random gen 1
-    layersizes = [1]
-    # layersizes[0] = 9   #inputsize
-    # layersizes[-1] = 5  #outputsize
+    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+    layersizes[0] = 9   #inputsize
+    layersizes[-1] = 5  #outputsize
     trainedAI = NetworkV3(layersizes)
 
     trainedAI.loadtxt(7) # load trained agent from files
@@ -52,13 +52,8 @@ class Agent():
         # initialize virtual simulator
         # create virtual world
         self.virtualWorld = notminecraft.world()
-        #self.virtualWorld.prepare_pickling()
         self.virtualWorld.player.set_AI(self.trainedAI.predict)
-        # f = notminecraft.fireball(self.virtualWorld, xyz= (x, 3, -20))
-        # self.virtualWorld.spawn(f)
-        # g = notminecraft.ghast(self.virtualWorld, xyz= (x, 3, -20))
-        # self.virtualWorld.spawn(g)
-        # self.virtualWorld.start()
+
 
         time.sleep(1)
 
@@ -129,22 +124,23 @@ class Agent():
         if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
             return
 
-        #**update to give closest ones**
-        ghast = ghasts[0]
-        fireball = fireballs[0]
+        # get player data
+        playerPos = np.array([player['x'], player['y'], player['z']])
+        pitch = player['pitch']
+        yaw = player['yaw']
+
+        # get closest ghast and fireball
+        ghast = self.getClosestEntity(playerPos, ghasts)
+        fireball = self.getClosestEntity(playerPos, fireballs)
 
 		# get positions
         ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
         fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
         fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
-        playerPos = np.array([player['x'], player['y'], player['z']])
-        pitch = player['pitch']
-        yaw = player['yaw']
 
-        #set player position and rotation here
+        # set player position and rotation here
         self.virtualWorld.player.transform.position = playerPos
         self.virtualWorld.player.transform.set_rotation(pitch,yaw) 
-
 
         # create observationData
         ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
@@ -152,9 +148,26 @@ class Agent():
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
 
-        # predict cmd from brain function
+        # get cmd from brain function
         cmd = self.virtualWorld.player.brain(observationData)
-        print(cmd)
+
+        move = f"move {cmd[0][0]}"
+        strafe = f"strafe {cmd[1][0]}"
+        pitch = f"pitch {cmd[2][0]}"
+        turn = f"turn {cmd[3][0]}"
+        attack = f"attack {np.round(cmd[4][0])}"
+
+        # run cmds
+        self.agent_host.sendCommand(move)
+        time.sleep(0.1)
+        self.agent_host.sendCommand(strafe)
+        time.sleep(0.1)
+        self.agent_host.sendCommand(pitch)
+        time.sleep(0.1)
+        self.agent_host.sendCommand(turn)
+        time.sleep(0.1)
+        self.agent_host.sendCommand(attack)
+        time.sleep(0.1)
 
     def getObservations(self, world_state):
         '''
@@ -178,6 +191,29 @@ class Agent():
             elif entity['name'] == 'GhastTennisAgent':
                 player = entity
         return player, ghasts, fireballs
+
+    def getClosestEntity(self, playerPos, entities):
+        '''
+        Get the closest entity relative to the agent.
+        '''
+
+        playerX = playerPos[0]
+        playerY = playerPos[1]
+        playerZ = playerPos[2]
+        
+        closest = None
+        closestDistance = -1
+        for entity in entities:
+            entityX = entity['x']
+            entityY = entity['y']
+            entityZ = entity['z']
+
+            distance = math.sqrt((playerX - entityX) ** 2 + (playerY - entityY) ** 2 + (playerZ - entityZ) ** 2)
+
+            if closest is None or distance < closestDistance:
+                closest = entity
+                closestDistance = distance
+        return closest
 
     def cleanWorld(self):
         '''
