@@ -226,6 +226,11 @@ class transform:
         self.quaternion = q2*q1
         self.forward = self.quaternion.rotate(fwd)                        
         return
+    
+    def set_rotation(self, pitch, yaw):
+        dpitch = pitch - self.pitch
+        dyaw = yaw - self.yaw
+        self.rotate(dpitch,dyaw)
 
 
 class entity:                                                                               #base class
