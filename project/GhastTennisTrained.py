@@ -155,7 +155,7 @@ class Agent():
         strafe = f"strafe {cmd[1][0]}"
         pitch = f"pitch {cmd[2][0]}"
         turn = f"turn {cmd[3][0]}"
-        attack = f"attack {np.round(cmd[4][0])}"
+        attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 
         # run cmds
         self.agent_host.sendCommand(move)
