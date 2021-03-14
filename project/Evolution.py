@@ -9,9 +9,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
-population = 1024 #power of 2, population *3/4 must be divisible by threads
+population = 64 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 1000
+generations = 100
+saveas = 0
 mutation_factor = 10
 AIsAndWorlds = list()
 
@@ -34,7 +35,7 @@ list got evaluated? or actually the bottom 3/4 need reevaluation
 def main():
 
     highscores = list()
-    threads = 6
+    threads = 12
     m = mp.Manager()
     Q = m.Queue()
 
@@ -81,7 +82,8 @@ def main():
         print("Generation %d : %f "%(g,highscores[g]))
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
-    print(AIsAndWorlds[-1][0].save(9))
+    print(AIsAndWorlds[-1][0].save(saveas))
+    np.save("Highscores/Highscore_%d,_generations_%d,_population_%d,mutation_factor_%d" % (saveas,generations,population,mutation_factor), np.asarray(highscores))
 
         
 

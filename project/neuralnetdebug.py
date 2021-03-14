@@ -164,8 +164,8 @@ class NetworkV3:
     
     def savetxt(self,r : int):
         for i in range(1,len(self.layersizes)):
-            np.savetxt("biases%d_%d.csv"%(r,i) , self.biases[i])
-            np.savetxt("weights%d_%d.csv"%(r,i), self.axons[i-1])
+            np.savetxt("networks/biases%d_%d.csv"%(r,i) , self.biases[i])
+            np.savetxt("networks/weights%d_%d.csv"%(r,i), self.axons[i-1])
     
     def save(self,r : int):
         #use npy later
@@ -178,8 +178,8 @@ class NetworkV3:
         weights = []
         try:
             for i in range(1,10):
-                biases.append(np.loadtxt("biases%d_%d.csv"%(r,i) , dtype=np.float32).reshape(-1,1))
-                weights.append(np.loadtxt("weights%d_%d.csv"%(r,i), dtype=np.float32))        
+                biases.append(np.loadtxt("networks/biases%d_%d.csv"%(r,i) , dtype=np.float32).reshape(-1,1))
+                weights.append(np.loadtxt("networks/weights%d_%d.csv"%(r,i), dtype=np.float32))        
         except OSError:
             pass
         self.biases= biases

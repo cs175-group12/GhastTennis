@@ -338,13 +338,17 @@ class agent(entity):                                          #max turn speed is
 
         self.observationData = np.array(self.observationData).reshape((9,1)) #make sure this works later
 
-        self.cmd = self.brain(self.observationData)     
+        self.cmd = self.brain(self.observationData)
+
+        #normalize from sigmoid to -1 to 1
+        
+        self.cmd = self.cmd * 2 - 1     
 
         self.turn(self.cmd[2], self.cmd[3])
 
         self.move(self.cmd[0], self.cmd[1])
 
-        if(self.cmd[4] > .5):
+        if(self.cmd[4] > 0):
             self.attack()
         
         #print("Time is ", self.world.time)
