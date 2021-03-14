@@ -6,12 +6,14 @@ import matplotlib.pyplot as pyplot
 import concurrent.futures as futures
 import multiprocessing as mp
 import warnings
+import os
 warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
-population = 1024 #power of 2, population *3/4 must be divisible by threads
+population = 64 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 1000
+generations = 100
+saveas = 109
 mutation_factor = 10
 AIsAndWorlds = list()
 
@@ -34,18 +36,18 @@ list got evaluated? or actually the bottom 3/4 need reevaluation
 def main():
 
     highscores = list()
-    threads = 6
+    threads = 12
     m = mp.Manager()
     Q = m.Queue()
 
     #initialize random gen 1
     for i in range(population):
-        layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+        layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
         layersizes[0] = 9   #inputsize
         layersizes[-1] = 5  #outputsize
         n = NetworkV3(layersizes)
         AIsAndWorlds.append([n, notminecraft.world()])
-        AIsAndWorlds[i][1].prepare_pickling()
+        AIsAndWorlds[i][1].prepare_pickling() #prepare pickling unnecessary with no processes
     
     args = []
         
@@ -56,6 +58,7 @@ def main():
 
         #evaluate (can be threaded)
         
+        #disabling multithreading 
         with mp.Pool(processes=threads) as pool:
             pool.starmap(run_worlds,args)
         
@@ -64,6 +67,17 @@ def main():
             for i in range(0, threads):
                 args.append([i*(int(population/threads*3/4)),(i+1)*(int(population/threads*3/4)),Q,AIsAndWorlds])
 
+        #better random
+        #for i in range(0, threads):
+            #args[i][4] = g*threads + i
+
+        #single threaded eval loop
+        # for i in range(0,population):
+        #     AIsAndWorlds[i][1].player.set_AI(AIsAndWorlds[i][0].predict) 
+        #     AIsAndWorlds[i][1].score =0
+        #     for o in range(3):
+        #         AIsAndWorlds[i][1].reset(basescore=AIsAndWorlds[i][1].score)
+        #         AIsAndWorlds[i][1].start()
 
         #new step from multiprocessing, unpack Q and assign scores
         while(not Q.empty()):
@@ -81,7 +95,8 @@ def main():
         print("Generation %d : %f "%(g,highscores[g]))
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
-    print(AIsAndWorlds[-1][0].save(9))
+    print(AIsAndWorlds[-1][0].save(saveas))
+    np.save("Highscores/Highscore_%d,_generations_%d,_population_%d,mutation_factor_%d" % (saveas,generations,population,mutation_factor), np.asarray(highscores))
 
         
 
@@ -96,7 +111,7 @@ def ReplaceAI(dest, src):
     AIsAndWorlds[dest][1].player.set_AI(AIsAndWorlds[dest][0].predict)
 
 def RandomizeAI(dest):
-    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
     layersizes[0] = 9   #inputsize
     layersizes[-1] = 5  #outputsize
     n = NetworkV3(layersizes)
@@ -143,9 +158,9 @@ def run_worlds(a,b,Q : mp.Queue, AIsAndWorlds):
         AIsAndWorlds[i][1].prepare_unpickle()
         AIsAndWorlds[i][1].player.set_AI(AIsAndWorlds[i][0].predict) 
         AIsAndWorlds[i][1].score =0
-        for o in range(3):
-            AIsAndWorlds[i][1].reset(basescore=AIsAndWorlds[i][1].score)
-            AIsAndWorlds[i][1].start()
+        #for o in range(3):
+        AIsAndWorlds[i][1].reset(basescore=0)
+        AIsAndWorlds[i][1].start()
         messages.append([i,AIsAndWorlds[i][1].score]) #for multiprocessing
     for i in range(len(messages)):
         Q.put(messages[i])
