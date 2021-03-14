@@ -225,8 +225,9 @@ def main():
     # pyplot.show()
     # return
     x = NetworkV3([1])
-    x.loadtxt(0)
-    x.mutate()
+    x.loadtxt(7)
+    #x.mutate()
+    b = 44
 
 
 

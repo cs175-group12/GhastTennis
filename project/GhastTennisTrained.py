@@ -52,7 +52,7 @@ class Agent():
         # initialize virtual simulator
         # create virtual world
         self.virtualWorld = notminecraft.world()
-        self.virtualWorld.prepare_pickling()
+        #self.virtualWorld.prepare_pickling()
         self.virtualWorld.player.set_AI(self.trainedAI.predict)
         # f = notminecraft.fireball(self.virtualWorld, xyz= (x, 3, -20))
         # self.virtualWorld.spawn(f)
@@ -129,6 +129,7 @@ class Agent():
         if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
             return
 
+        #**give closest ones**
         ghast = ghasts[0]
         fireball = fireballs[0]
 
@@ -137,9 +138,9 @@ class Agent():
         fireballVelocity = [fireball['motionX'], fireball['motionY'], fireball['motionZ']]
 
         # tranform to points
-        ghastPoint = notminecraft.transform(ghastPos)
-        fireballPoint = notminecraft.transform(fireballPos)
-        fireballVelPoint = notminecraft.transform(fireballVelocity)
+        ghastPoint = np.asarray(ghastPos)
+        fireballPoint = np.asarray(fireballPos)
+        fireballVelPoint = np.asarray(fireballVelocity)
 
 
         # self.virtualWorld.player.set_AI(self.trainedAI.predict)
