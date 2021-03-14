@@ -26,7 +26,7 @@
     </ServerSection>
 
     <AgentSection mode="Survival">
-        <Name>GhastTennis Agent</Name>
+        <Name>GhastTennisAgent</Name>
         <AgentStart>
             <Placement x="0.5" y="3" z="0.5" yaw="180"/>
         </AgentStart>

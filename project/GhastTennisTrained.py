@@ -122,7 +122,7 @@ class Agent():
 
     def takeAction(self, world_state):
         # ghasts and fireballs from malmo
-        ghasts, fireballs = self.getGhastsAndFireballs(world_state)
+        player, ghasts, fireballs = self.getObservations(world_state)
         # print(f"Ghast: {ghasts}")
         # print(f"Fireballs: {fireballs}")
 
@@ -133,46 +133,41 @@ class Agent():
         ghast = ghasts[0]
         fireball = fireballs[0]
 
-        ghastPos = [ghast['x'], ghast['y'], ghast['z']]
-        fireballPos = [fireball['x'], fireball['y'], fireball['z']]
-        fireballVelocity = [fireball['motionX'], fireball['motionY'], fireball['motionZ']]
-
-        # tranform to points
-        ghastPoint = np.asarray(ghastPos)
-        fireballPoint = np.asarray(fireballPos)
-        fireballVel = np.asarray(fireballVelocity)
+		# get positions
+        ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
+        fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
+        fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
+        playerPos = np.array([player['x'], player['y'], player['z']])
+        pitch = player['pitch']
+        yaw = player['yaw']
 
         #set player position and rotation here
-        self.virtualWorld.player.transform.position = '''your positional information from malmo in a flattened numpy array'''
-        self.virtualWorld.player.transform.set_rotation(pitch,yaw) '''get information from malmo'''
+        self.virtualWorld.player.transform.position = playerPos
+        self.virtualWorld.player.transform.set_rotation(pitch,yaw) 
 
 
         # create observationData
-        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPoint)
-        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPoint)
-        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVel,direction=True)
+        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
+        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)
+        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
-        # observationData = np.array(observationData).reshape((9,1))
-        # print(observationData)
-        # self.virtualWorld.observationData = observationData
 
         # predict cmd from brain function
         cmd = self.virtualWorld.player.brain(observationData)
-
-        # cmd = self.virtualWorld.player.cmd
         print(cmd)
 
-    def getGhastsAndFireballs(self, world_state):
+    def getObservations(self, world_state):
         '''
-        Checks world state for fireballs and ghasts and adds them into seperate lists.
+        Gets the player, ghasts, and fireballs from the world state.
         '''
 
         if world_state.number_of_observations_since_last_state == 0:
-            return [], []
+            return None, [], []
         obvsText = world_state.observations[-1].text
         data = json.loads(obvsText)
         if 'entities' not in data:
-            return [], []
+            return None, [], []
+        player = None
         ghasts = []
         fireballs = []
         for entity in data['entities']:
@@ -180,10 +175,9 @@ class Agent():
                 ghasts.append(entity)
             elif entity['name'] == 'Fireball':
                 fireballs.append(entity)
-                # if entity['id'] not in self.fireballs:
-                #     self.fireballs.append(entity['id']) # keep track of new fireballs
-
-        return ghasts, fireballs
+            elif entity['name'] == 'GhastTennisAgent':
+                player = entity
+        return player, ghasts, fireballs
 
     def cleanWorld(self):
         '''
