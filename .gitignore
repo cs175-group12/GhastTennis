@@ -10,5 +10,8 @@ Gemfile.lock
 *.lib
 *.pyd
 
+# Python
+__pycache__
+
 # VS Code
 .vscode/
