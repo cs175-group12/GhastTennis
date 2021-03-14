@@ -175,17 +175,17 @@ class NetworkV3:
 
 
     def loadtxt(self,r:int):
-        biases = []
+        biases = [np.zeros((9,1))]
         weights = []
         try:
             for i in range(1,10):
-                biases.append(np.loadtxt("biases%d_%d.csv"%(r,i) , dtype=np.float32))
+                biases.append(np.loadtxt("biases%d_%d.csv"%(r,i) , dtype=np.float32).reshape(-1,1))
                 weights.append(np.loadtxt("weights%d_%d.csv"%(r,i), dtype=np.float32))        
         except OSError:
             pass
         self.biases= biases
         self.axons = weights
-        self.layersizes = [9] # didnt save layersizes so im just assuming input it 9
+        self.layersizes = [] # didnt save layersizes so im just assuming input it 9
         self.neurons.clear() #technically i could get that from shape[1] of weights[0] tho
         self.neurons.append(np.zeros((9,1)))
         for i in range(len(self.biases)):

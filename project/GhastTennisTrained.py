@@ -11,9 +11,9 @@ import math
 
 def main():
     #initialize random gen 1
-    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
-    layersizes[0] = 9   #inputsize
-    layersizes[-1] = 5  #outputsize
+    layersizes = [1]
+    # layersizes[0] = 9   #inputsize
+    # layersizes[-1] = 5  #outputsize
     trainedAI = NetworkV3(layersizes)
 
     trainedAI.loadtxt(7) # load trained agent from files

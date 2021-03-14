@@ -482,12 +482,18 @@ def test5():
     for i in range(10):
         print(list(map( lambda b: b*1, screen[i]) ))
     
-
+import neuralnetdebug as nn
+def test6():
+    n = nn.NetworkV3([1])
+    n.loadtxt(7)
+    sekai = world()
+    sekai.player.set_AI(n.predict)
+    sekai.start()
 
 if(__name__ == "__main__"):
     starttime = time.time()
-    test4()
-    test5()
+    #test4()
+    test6()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 
