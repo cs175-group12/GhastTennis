@@ -9,10 +9,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
-population = 64 #power of 2, population *3/4 must be divisible by threads
+population = 512 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 100
-saveas = 0
+generations = 50
+saveas = 101
 mutation_factor = 10
 AIsAndWorlds = list()
 

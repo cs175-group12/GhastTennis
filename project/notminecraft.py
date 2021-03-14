@@ -77,7 +77,7 @@ class world:
         self.update()
 
     def update(self):
-        while(self.time < 10): #going to do avg of 3 runs
+        while(self.time < 20): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
@@ -207,7 +207,7 @@ class transform:
     def rotate(self, dpitch, dyaw):                                                         #in minecraft, positive z is north, and 0 degrees faces north
         self.pitch += dpitch                                                                #in malmo, positive yaw goes right, negative left
         self.yaw += dyaw                                                                         #in malmo , positive pitch goes down, negative up 
-        np.clip( self.pitch , -89, 89.0)                                                    #pitch is clamped between -90 and 90
+        self.pitch = np.clip( self.pitch , -89, 89.0)                                                    #pitch is clamped between -90 and 90
         self.yaw += (360 if self.yaw < -.01 else 0) - (360 if self.yaw >= 360 else 0)           #yaw loops over
         fwd = np.asarray([0,0,1], dtype = np.float32)
         
@@ -351,7 +351,7 @@ class agent(entity):                                          #max turn speed is
         if(self.cmd[4] > 0):
             self.attack()
         
-        #print("Time is ", self.world.time)
+        print("pitch is ", self.cmd[3])
         return
 
     def turn(self,d_pitch, d_yaw):
@@ -489,7 +489,7 @@ def test5():
 import neuralnetdebug as nn
 def test6():
     n = nn.NetworkV3([1])
-    n.loadtxt(7)
+    n.loadtxt(101)
     sekai = world()
     sekai.player.set_AI(n.predict)
     sekai.start()
