@@ -41,7 +41,7 @@ def main():
 
     #initialize random gen 1
     for i in range(population):
-        layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+        layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
         layersizes[0] = 9   #inputsize
         layersizes[-1] = 5  #outputsize
         n = NetworkV3(layersizes)
@@ -98,7 +98,7 @@ def ReplaceAI(dest, src):
     AIsAndWorlds[dest][1].player.set_AI(AIsAndWorlds[dest][0].predict)
 
 def RandomizeAI(dest):
-    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
     layersizes[0] = 9   #inputsize
     layersizes[-1] = 5  #outputsize
     n = NetworkV3(layersizes)

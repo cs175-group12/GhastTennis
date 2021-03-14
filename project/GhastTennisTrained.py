@@ -11,12 +11,12 @@ import math
 
 def main():
     #initialize random gen 1
-    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
-    layersizes[0] = 9   #inputsize
-    layersizes[-1] = 5  #outputsize
-    trainedAI = NetworkV3(layersizes)
+    # layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
+    # layersizes[0] = 9   #inputsize
+    # layersizes[-1] = 5  #outputsize
+    trainedAI = NetworkV3([1])
 
-    trainedAI.loadtxt(7) # load trained agent from files
+    trainedAI.loadtxt(0) # load trained agent from files
 
     runs = 10
 
@@ -151,23 +151,23 @@ class Agent():
         # get cmd from brain function
         cmd = self.virtualWorld.player.brain(observationData)
 
-        move = f"move {cmd[0][0]}"
-        strafe = f"strafe {cmd[1][0]}"
-        pitch = f"pitch {cmd[2][0]}"
-        turn = f"turn {cmd[3][0]}"
+        move = f"move {cmd[0][0] * 2 -1 }"
+        strafe = f"strafe {cmd[1][0] * 2 - 1}"
+        pitch = f"pitch {cmd[2][0] * 2 - 1}"
+        turn = f"turn {cmd[3][0] * 2 - 1}"
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 
         # run cmds
         self.agent_host.sendCommand(move)
-        time.sleep(0.1)
+        #time.sleep(0.1)
         self.agent_host.sendCommand(strafe)
-        time.sleep(0.1)
+        #time.sleep(0.1)
         self.agent_host.sendCommand(pitch)
-        time.sleep(0.1)
+        #time.sleep(0.1)
         self.agent_host.sendCommand(turn)
-        time.sleep(0.1)
+        #time.sleep(0.1)
         self.agent_host.sendCommand(attack)
-        time.sleep(0.1)
+        time.sleep(0.05)
 
     def getObservations(self, world_state):
         '''
