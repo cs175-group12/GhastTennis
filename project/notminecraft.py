@@ -77,7 +77,7 @@ class world:
         self.update()
 
     def update(self):
-        while(self.time < 20): #going to do avg of 3 runs
+        while(self.time < 10): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
