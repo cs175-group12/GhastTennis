@@ -129,7 +129,7 @@ class Agent():
         if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
             return
 
-        #**give closest ones**
+        #**update to give closest ones**
         ghast = ghasts[0]
         fireball = fireballs[0]
 
@@ -140,13 +140,19 @@ class Agent():
         # tranform to points
         ghastPoint = np.asarray(ghastPos)
         fireballPoint = np.asarray(fireballPos)
-        fireballVelPoint = np.asarray(fireballVelocity)
+        fireballVel = np.asarray(fireballVelocity)
+
+        #set player position and rotation here
+        self.virtualWorld.player.transform.position = '''your positional information from malmo in a flattened numpy array'''
+        self.virtualWorld.player.transform.set_rotation(pitch,yaw) '''get information from malmo'''
 
 
-        # self.virtualWorld.player.set_AI(self.trainedAI.predict)
         # create observationData
-        observationData = ghastPoint.world_to_local(ghastPos), fireballPoint.world_to_local(fireballPos), fireballVelPoint.world_to_local(fireballVelocity,direction=True)
-        observationData = np.array(observationData).reshape((9,1))
+        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPoint)
+        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPoint)
+        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVel,direction=True)
+        observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
+        # observationData = np.array(observationData).reshape((9,1))
         # print(observationData)
         # self.virtualWorld.observationData = observationData
 
