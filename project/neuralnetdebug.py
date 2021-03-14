@@ -151,6 +151,10 @@ class NetworkV3:
             gamma = (np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1]) -.5) * amount
             delta = (delta < rate) / self.axons[i].shape[1]*gamma
             self.axons[i] += delta  
+            delta_b = np.random.rand(self.biases[i+1].shape[0], self.biases[i+1].shape[1])
+            gamma_b = (np.random.rand(self.biases[i+1].shape[0], self.biases[i+1].shape[1]) -.5 ) * amount
+            delta_b = (delta_b < rate) / self.biases[i].shape[0]*gamma_b
+            self.biases[i+1] += delta_b
 
     def predict(self, input):
         '''

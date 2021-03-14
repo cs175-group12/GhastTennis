@@ -49,8 +49,10 @@ class world:
         self.time = 0
         self.idcounter = 1
         self.score = 0.0
-        g = ghast(self, xyz= (0,10,10) )
-        g.teleport() #testing this out
+        #self.random = np.random.default_rng()
+        self.ghastsKilled = 0
+        g = ghast(self, xyz= (0,0,10) )
+        #g.teleport() #testing this out
         self.spawn(g)
         return
     
@@ -75,9 +77,11 @@ class world:
     def start(self):
         #np.random.seed(int(time.time()))
         self.update()
+        print(self.score)
+        #print(self.closestGhast.transform.position)
 
     def update(self):
-        while(self.time < 10): #going to do avg of 3 runs
+        while(self.time < 20): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
@@ -92,7 +96,7 @@ class world:
         self.closestFireball=None
         self.closestGhast=None
         self.entities.clear()
-        g = ghast(self, xyz=(0,10,-10))
+        g = ghast(self, xyz=(0,0,10))
         self.spawn(g)
     
     def update_world(self):
@@ -150,13 +154,19 @@ class world:
     def reward_facing(self):
         if(self.closestFireball == None or self.closestGhast == None):
             return
-        fwd = self.player.transform.forward
-        pos = self.player.transform.position
-        ghastdir = (self.closestGhast.transform.position - pos)
-        ghastdir /= np.sqrt(ghastdir.dot(ghastdir))
-        fireballdir= (self.closestFireball.transform.position - pos)
-        fireballdir/= np.sqrt(fireballdir.dot(fireballdir))
-        self.score += (fwd.dot(ghastdir)**2 + fwd.dot(fireballdir)**2)*.05
+        # #reward looking towards the ghast and fireball
+        # fwd = self.player.transform.forward
+        # pos = self.player.transform.position
+        # ghastdir = (self.closestGhast.transform.position - pos)
+        # ghastdir /= np.sqrt(ghastdir.dot(ghastdir))
+        # fireballdir= (self.closestFireball.transform.position - pos)
+        # fireballdir/= np.sqrt(fireballdir.dot(fireballdir))
+        # self.score += (fwd.dot(ghastdir)**2 + fwd.dot(fireballdir)**2)*.25
+
+        # # #punish looking at the ground and ceiling
+        # fwd = self.player.transform.forward
+        # pitchfactor = fwd.dot(np.asarray([0,-1,0]))**2
+        # self.score -= pitchfactor * .25
         return
 
     def reward_fireballxghast(self):
@@ -277,6 +287,8 @@ class ghast(entity):                                                            
         self.radius = 2
         self.fireinterval = 2
         self.lastfiretime = -2
+        self.ghastsKilled = 0
+        self.spawns = np.asarray([[10,2,10], [-10,2,10],[0,-5,10] , [0,5,10], [15,-2,0],  [-10,-10,10], [-10,0,-10], [0,0,0]], dtype=np.float32)
         return
     
     def update(self):
@@ -292,6 +304,7 @@ class ghast(entity):                                                            
     def on_collision(self, other):
         if(type(other) == fireball):
             self.world.reward_fireballxghast()
+            self.ghastsKilled+=1
             #also, randomize ghast position now relative to player. anything above them and within 30 blocks works. 
             #also set last fire time to 2 seconds ago.
             self.teleport()
@@ -299,9 +312,26 @@ class ghast(entity):                                                            
         return
     
     def teleport(self):
-        offset = np.random.random_sample((3)) * 60 - 30
-        offset[1] = np.abs(offset[1])
-        self.transform.position = self.world.player.transform.position + offset
+        #f it lets just do it deterministically
+        self.transform.position = self.spawns[self.ghastsKilled].copy()
+
+        #patched to make sure ghast doesnt spawn above player
+        # offset = np.random.random_sample((3)) * 60 - 30
+        # offset[1] = np.abs(offset[1])
+        # vertical = np.asarray([0,1,0])
+        # offset /= np.sqrt(offset.dot(offset + .001))
+        # while(vertical.dot(offset)>.81):
+        #     offset[1] *=.7
+        #     offset /= np.sqrt(offset.dot(offset))
+        # offset *= 30
+
+        # xz = (self.world.random.random((2))) * 15.0 + 10
+        # sign = self.world.random.integers(low=0,high=2,size=(2))
+        # sign += (sign==0) *-1
+        # xz *= sign
+        # y = self.world.random.random((1)) * 10
+        # offset = np.asarray([xz[0],y[0],xz[1]]) 
+        # self.transform.position = self.world.player.transform.position + offset
 
 class agent(entity):                                          #max turn speed is 180 deg per second, max walk speed is 4.317 meters per second
     '''the agent is created by the world. think of this as
@@ -351,7 +381,7 @@ class agent(entity):                                          #max turn speed is
         if(self.cmd[4] > 0):
             self.attack()
         
-        print("pitch is ", self.cmd[3])
+        #print("pitch is ", self.transform.pitch)
         return
 
     def turn(self,d_pitch, d_yaw):
@@ -489,7 +519,7 @@ def test5():
 import neuralnetdebug as nn
 def test6():
     n = nn.NetworkV3([1])
-    n.loadtxt(101)
+    n.loadtxt(109)
     sekai = world()
     sekai.player.set_AI(n.predict)
     sekai.start()
