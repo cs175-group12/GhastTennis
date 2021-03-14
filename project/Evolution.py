@@ -9,9 +9,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
-population = 16 #power of 2
+population = 1024 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 200
+generations = 1000
 mutation_factor = 10
 AIsAndWorlds = list()
 
@@ -34,7 +34,7 @@ list got evaluated? or actually the bottom 3/4 need reevaluation
 def main():
 
     highscores = list()
-    threads = 4
+    threads = 6
     m = mp.Manager()
     Q = m.Queue()
 
@@ -78,10 +78,10 @@ def main():
         #cut off bottom half
         #generating new ai can be multithreaded (also id like a different scheme for this)
         
-        print(highscores[g])
+        print("Generation %d : %f "%(g,highscores[g]))
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
-    print(AIsAndWorlds[-1][0].save(8))
+    print(AIsAndWorlds[-1][0].save(9))
 
         
 
