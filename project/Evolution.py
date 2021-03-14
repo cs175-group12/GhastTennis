@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 population = 64 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
 generations = 100
-saveas = 109
+saveas = 112
 mutation_factor = 10
 AIsAndWorlds = list()
 
@@ -42,7 +42,7 @@ def main():
 
     #initialize random gen 1
     for i in range(population):
-        layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
+        layersizes = np.random.randint(low = 81, high = 729, size = np.random.random_integers(5,10))
         layersizes[0] = 9   #inputsize
         layersizes[-1] = 5  #outputsize
         n = NetworkV3(layersizes)
@@ -53,6 +53,9 @@ def main():
         
     for i in range(0, threads):
         args.append([i*(int(population/threads)),(i+1)*(int(population/threads)),Q,AIsAndWorlds])
+
+    highscorer = 0
+    highscore = 0
 
     for g in range(generations):
 
@@ -111,7 +114,7 @@ def ReplaceAI(dest, src):
     AIsAndWorlds[dest][1].player.set_AI(AIsAndWorlds[dest][0].predict)
 
 def RandomizeAI(dest):
-    layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,7))
+    layersizes = np.random.randint(low = 81, high = 729, size = np.random.random_integers(5,10))
     layersizes[0] = 9   #inputsize
     layersizes[-1] = 5  #outputsize
     n = NetworkV3(layersizes)
