@@ -46,8 +46,11 @@ class Agent():
         self.cleanWorld()
         self.makeInvincible()
         time.sleep(0.1)
-        x = random.randint(-10, 10)
-        self.summonGhast(x, 3, -20)
+
+        # x = random.randint(-10, 10)
+        # self.summonGhast(x, 3, -20)
+        degree = random.randint(0, 359)
+        self.summonGhastAroundPlayer(degree, 20, 3)
 
         # initialize virtual simulator
         # create virtual world
@@ -197,19 +200,12 @@ class Agent():
         Get the closest entity relative to the agent.
         '''
 
-        playerX = playerPos[0]
-        playerY = playerPos[1]
-        playerZ = playerPos[2]
-        
+        playerX, playerY, playerZ = playerPos
         closest = None
         closestDistance = -1
         for entity in entities:
-            entityX = entity['x']
-            entityY = entity['y']
-            entityZ = entity['z']
-
+            entityX, entityY, entityZ = entity['x'], entity['y'], entity['z']
             distance = math.sqrt((playerX - entityX) ** 2 + (playerY - entityY) ** 2 + (playerZ - entityZ) ** 2)
-
             if closest is None or distance < closestDistance:
                 closest = entity
                 closestDistance = distance
@@ -242,9 +238,19 @@ class Agent():
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
 
-    # def reset(self):
-    #     # Reset Malmo.  
-    #     world_state = self.init_malmo()
+    def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
+        '''
+        Summon a Ghast at a certain degree [0-360) relative to the player.
+        Assumes the player is facing north and is at x=0, z=0.
+        If stationary, then the summoned Ghast will be inside a minecart.
+        '''
+        
+        assert (degree >= 0 and degree < 360)
+        x = distance * math.cos(math.radians(degree - 90))
+        z = distance * math.sin(math.radians(degree - 90))
+        yaw = degree
+        self.summonGhast(x, y, z, yaw, stationary)
+
 
 
 if __name__ == '__main__':
