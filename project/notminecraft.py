@@ -241,6 +241,7 @@ class transform:
         dpitch = pitch - self.pitch
         dyaw = yaw - self.yaw
         self.rotate(dpitch,dyaw)
+    
 
 
 class entity:                                                                               #base class
@@ -531,10 +532,30 @@ def test7():
     sekai.player.set_AI(n.predict)
     sekai.start()
 
+def test8():
+    t = transform()
+    t.set_rotation(0,90)
+    print(t.forward)
+    t.set_rotation(0,180)
+    print(t.forward)
+    t.set_rotation(0,270)
+    print(t.forward)
+
+def test9():
+    t = transform()
+    print(t.forward)
+    t.set_rotation(0,0)
+    print(t.forward)
+    t.set_rotation(-90,0)
+    print(t.forward)
+    t.set_rotation(90,0)
+    print(t.forward)
+
 if(__name__ == "__main__"):
     starttime = time.time()
     #test4()
-    test6()
+    #test6()
+    test9()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 
