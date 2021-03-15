@@ -1,79 +1,81 @@
-from neuralnetdebug import NetworkV3, PerfectNetwork
-import notminecraft
-import numpy as np
-import MalmoPython
 import sys
 import time
 import json
-import matplotlib.pyplot as plt
 import random
 import math
+import numpy as np
+import matplotlib.pyplot as plt
+import MalmoPython
+import notminecraft
+from neuralnetdebug import NetworkV3, PerfectNetwork
 
 def main():
-    #initialize random gen 1
-    # layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
-    # layersizes[0] = 9   #inputsize
-    # layersizes[-1] = 5  #outputsize
-    #trainedAI = NetworkV3([1])
+    # Load NN data.
     trainedAI = PerfectNetwork()
-    #trainedAI.loadtxt(114) # load trained agent from files
 
+    # Create agent.
     runs = 10
-
-    # Create agent
     agent = Agent(trainedAI)
-    for i in range(runs):
+    for _ in range(runs):
         agent.start()
 
 
 
 class Agent():
     def __init__(self, trainedAI):
-        self.trainedAI = trainedAI # store trained agent in Agent class
+        # Agent Parameters
+        self.trainedAI = trainedAI
         self.virtualWorld = None
 
-        # Malmo Parameters
+        # Malmo Host
         self.agent_host = MalmoPython.AgentHost()
         try:
-            self.agent_host.parse( sys.argv )
+            self.agent_host.parse(sys.argv)
         except RuntimeError as e:
             print('ERROR:', e)
             print(self.agent_host.getUsage())
             exit(1)
 
-    def initialize(self):
-        print("Initializing...")
-        self.cleanWorld()
-        self.makeInvincible()
-        time.sleep(0.1)
+    def start(self):
+        """
+        Start the agent.
+        """
 
-        # x = random.randint(-10, 10)
-        # self.summonGhast(x, 3, -20)
-        degree = random.randint(0, 359)
-        self.summonGhastAroundPlayer(degree, 20, 3)
+        # Initialize Malmo and the Minecraft world.
+        world_state = self.initMalmo()
+        self.initWorld()
 
-        # initialize virtual simulator
-        # create virtual world
+        # Initialize virtual world for the NN.
         self.virtualWorld = notminecraft.world()
         self.virtualWorld.player.set_AI(self.trainedAI.predict)
-
-
         time.sleep(1)
 
-    def init_malmo(self):
+        # Take action while the mission is running.
+        while world_state.is_mission_running:
+            print(".", end="")
+            time.sleep(0.1)
+            world_state = self.agent_host.getWorldState()
+            self.takeAction(world_state)
+            for error in world_state.errors:
+                print("Error:", error.text)
+
+        # End mission.
+        print()
+        print("Mission ended")
+
+    def initMalmo(self):
         """
         Initialize new Malmo mission.
         """
 
         # Load the XML file and create mission spec & record.
+        print("Initializing...")
         mission_file = './mission.xml'
         with open(mission_file, 'r') as f:
             print("Loading mission from %s" % mission_file)
             mission_xml = f.read()
             my_mission = MalmoPython.MissionSpec(mission_xml, True)
             my_mission_record = MalmoPython.MissionRecordSpec()
-            my_mission.requestVideo(800, 500)
-            my_mission.setViewpoint(1)
 
         # Attempt to start Malmo.
         max_retries = 3
@@ -97,70 +99,71 @@ class Agent():
             world_state = self.agent_host.getWorldState()
             for error in world_state.errors:
                 print("\nError:", error.text)
-        self.initialize()
         return world_state
 
-    def start(self):
-        """
-        Runs agent while world is still running
-        """
-        world_state = self.init_malmo()
-        # Take action
-        while world_state.is_mission_running:
-            print(".", end="")
-            time.sleep(0.1)
-            world_state = self.agent_host.getWorldState()
-            self.takeAction(world_state)
-            for error in world_state.errors:
-                print("Error:",error.text)
+    def initWorld(self):
+        '''
+        Initialize the Minecraft world.
+        Clean the world, make the player invincible, and spawn ghasts.
+        '''
 
-        # End mission
-        print()
-        print("Mission ended")
+        self.cleanWorld()
+        self.makeInvincible()
+        time.sleep(0.1)
+
+        # Summon a ghast randomly in front of the player.
+        # x = random.randint(-10, 10)
+        # self.summonGhast(x, 3, -20)
+
+        # Summon a ghast randomly around the player.
+        degree = random.randint(-180, 179)
+        self.summonGhastAroundPlayer(degree, 20, 3)
 
     def takeAction(self, world_state):
-        # ghasts and fireballs from malmo
-        player, ghasts, fireballs = self.getObservations(world_state)
-        # print(f"Ghast: {ghasts}")
-        # print(f"Fireballs: {fireballs}")
+        '''
+        Compute the next action for the agent to take.
+        '''
 
-        if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
+        # Get observation from the Minecraft world.
+        player, ghasts, fireballs = self.getObservations(world_state)
+        if len(ghasts) == 0 or len(fireballs) == 0: # If either are missing do nothing
             return
 
-        # get player data
+        # Parse player data.
         playerPos = np.array([player['x'], player['y'], player['z']])
         pitch = player['pitch']
         yaw = player['yaw']
 
-        # get closest ghast and fireball
+        # Get closest ghast and fireball.
         ghast = self.getClosestEntity(playerPos, ghasts)
         fireball = self.getClosestEntity(playerPos, fireballs)
 
-		# get positions
+		# Get ghast position and fireball position & velocity.
         ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
         fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
         fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
 
-        # set player position and rotation here
+        # Set the player position and rotation in the virtual world.
         self.virtualWorld.player.transform.position = playerPos
         self.virtualWorld.player.transform.set_rotation(pitch,yaw) 
 
-        # create observationData
+        # Create the observation input for the NN.
         ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
         fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
 
-        # get cmd from brain function
+        # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
 
+        # Parse the output to Malmo format.
         move = f"move {cmd[0][0] * 2 -1 }"
         strafe = f"strafe {cmd[1][0] * 2 - 1}"
         pitch = f"pitch {cmd[2][0] * 2 - 1}"
         turn = f"turn {cmd[3][0] * 2 - 1}"
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 
-        # run cmds
+        # Run the output.
         self.agent_host.sendCommand(move)
         #time.sleep(0.1)
         self.agent_host.sendCommand(strafe)
@@ -174,7 +177,7 @@ class Agent():
 
     def getObservations(self, world_state):
         '''
-        Gets the player, ghasts, and fireballs from the world state.
+        Get the player, ghasts, and fireballs from the world state.
         '''
 
         if world_state.number_of_observations_since_last_state == 0:
@@ -240,14 +243,14 @@ class Agent():
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
-        Summon a Ghast at a certain degree [0-360) relative to the player.
-        Assumes the player is facing north and is at x=0, z=0.
+        Summon a Ghast at a certain degree [-180,180) relative to the player.
+        Assume the player is facing north and is at x=0, z=0.
         If stationary, then the summoned Ghast will be inside a minecart.
         '''
         
-        assert (degree >= 0 and degree < 360)
-        x = distance * math.cos(math.radians(degree - 90))
-        z = distance * math.sin(math.radians(degree - 90))
+        assert (degree >= -180 and degree < 180)
+        x = distance * math.cos(math.radians(degree - 270))
+        z = distance * math.sin(math.radians(degree - 270))
         yaw = degree
         self.summonGhast(x, y, z, yaw, stationary)
 
