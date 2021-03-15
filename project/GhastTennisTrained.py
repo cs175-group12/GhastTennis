@@ -119,7 +119,7 @@ class Agent():
 
         # Summon a ghast randomly around the player.
         degree = random.randint(0, 359)
-        self.summonGhastAroundPlayer(315, 20, 3)
+        self.summonGhastAroundPlayer(degree, 20, 3)
 
     def takeAction(self, world_state):
         '''
