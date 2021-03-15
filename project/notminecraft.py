@@ -382,7 +382,7 @@ class agent(entity):                                          #max turn speed is
         if(self.cmd[4] > 0):
             self.attack()
         
-        #print("yaw is ", self.transform.yaw)
+        print("yaw is ", self.transform.yaw)
         return
 
     def turn(self,d_pitch, d_yaw):
@@ -525,10 +525,16 @@ def test6():
     sekai.player.set_AI(n.predict)
     sekai.start()
 
+def test7():
+    n = nn.PerfectNetwork()
+    sekai = world()
+    sekai.player.set_AI(n.predict)
+    sekai.start()
+
 if(__name__ == "__main__"):
     starttime = time.time()
     #test4()
-    test6()
+    test7()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 

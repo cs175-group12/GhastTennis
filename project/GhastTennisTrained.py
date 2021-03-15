@@ -1,4 +1,4 @@
-from neuralnetdebug import NetworkV3
+from neuralnetdebug import NetworkV3, PerfectNetwork
 import notminecraft
 import numpy as np
 import MalmoPython
@@ -14,9 +14,9 @@ def main():
     # layersizes = np.random.randint(low = 9, high = 81, size = np.random.random_integers(3,6))
     # layersizes[0] = 9   #inputsize
     # layersizes[-1] = 5  #outputsize
-    trainedAI = NetworkV3([1])
-
-    trainedAI.loadtxt(114) # load trained agent from files
+    #trainedAI = NetworkV3([1])
+    trainedAI = PerfectNetwork()
+    #trainedAI.loadtxt(114) # load trained agent from files
 
     runs = 10
 

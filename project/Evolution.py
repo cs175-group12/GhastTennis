@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 population = 64 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
 generations = 100
-saveas = 114
+saveas = 115
 mutation_factor = 10
 AIsAndWorlds = list()
 
