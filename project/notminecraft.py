@@ -309,6 +309,7 @@ class ghast(entity):                                                            
             #also set last fire time to 2 seconds ago.
             self.teleport()
             self.lastfiretime = self.world.time - 1.95
+            #print("Hit ghast " , self.ghastsKilled)
         return
     
     def teleport(self):
@@ -381,7 +382,7 @@ class agent(entity):                                          #max turn speed is
         if(self.cmd[4] > 0):
             self.attack()
         
-        #print("pitch is ", self.transform.pitch)
+        #print("yaw is ", self.transform.yaw)
         return
 
     def turn(self,d_pitch, d_yaw):
@@ -519,7 +520,7 @@ def test5():
 import neuralnetdebug as nn
 def test6():
     n = nn.NetworkV3([1])
-    n.loadtxt(109)
+    n.loadtxt(114)
     sekai = world()
     sekai.player.set_AI(n.predict)
     sekai.start()

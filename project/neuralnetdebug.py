@@ -131,9 +131,9 @@ class NetworkV3:
         self.biases = list()            #bonus connection to each neuron in each layer. same shape as self.neurons
         for i in range(len(layersizes)):
             self.neurons.append(np.zeros( (layersizes[i],1) ))
-            self.biases.append(np.random.rand(layersizes[i],1)/layersizes[i])
+            self.biases.append((np.random.rand(layersizes[i],1)-.5)/np.sqrt(self.layersizes[i]))#)/layersizes[i])
             if(i>0):
-                self.axons.append(np.random.rand( self.layersizes[i],self.layersizes[i-1] ) / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) 
+                self.axons.append( (np.random.rand( self.layersizes[i],self.layersizes[i-1] ) -.5)/np.sqrt(self.layersizes[i-1])  ) # / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) 
         return
 
     def reproduce(self):
