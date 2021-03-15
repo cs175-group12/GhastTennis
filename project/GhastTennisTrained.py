@@ -13,6 +13,7 @@ def main():
     # Load NN data.
     trainedAI = PerfectNetwork()
     #trainedAI.loadtxt(119) # load trained agent from files
+
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
@@ -123,16 +124,17 @@ class Agent():
         '''
         Compute the next action for the agent to take.
         '''
+
         # Get observation from the Minecraft world.
         player, ghasts, fireballs = self.getObservations(world_state)
 
         #if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
         #    return
 
-        if(len(ghasts)==0):
+        if len(ghasts) == 0:
             return
         useghastasfireball = False
-        if(len(fireballs)==0):
+        if len(fireballs) == 0:
             useghastasfireball = True
 
         # Parse player data.
@@ -144,14 +146,12 @@ class Agent():
         ghast = self.getClosestEntity(playerPos, ghasts)
         #fireball = self.getClosestEntity(playerPos, fireballs)
 
-		# Get ghast position 
+		    # Get ghast position and fireball position & velocity.
         ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
-
-        #ugly patch ,  fireball position & velocity.
         fireball = 0 
         fireballPos = 0
         fireballVelocity = 0
-        if(useghastasfireball==False):
+        if useghastasfireball == False:
             fireball = self.getClosestEntity(playerPos, fireballs)
             fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
             fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
@@ -160,8 +160,6 @@ class Agent():
             fireballVelocity = np.array([0,0,0])
 
         # Set the player position and rotation in the virtual world.
-
-        # set player position and rotation here
         self.virtualWorld.player.transform.position = playerPos
         self.virtualWorld.player.transform.set_rotation(pitch,yaw) 
 
