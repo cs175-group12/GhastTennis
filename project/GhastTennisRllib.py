@@ -25,7 +25,7 @@ class Agent(gym.Env):
 
         # Rllib parameters
         self.action_space = Box(-1, 1, shape=(5, ), dtype=np.float32) # 0: move, 1: strafe, 2: pitch, 3: turn, 4: attack
-        self.observation_space = Box(-5000.0, 5000.0, shape=(3 * self.obs_size * self.obs_size, ), dtype=np.float32) # 0: ghast position, 1: fireball position, 2: fireball velocity
+        self.observation_space = Box(-5000.0, 5000.0, shape=(3 * self.obs_size, ), dtype=np.float32) # 0: ghast position, 1: fireball position, 2: fireball velocity
 
         # # Agent parameters
         self.episode_step = 0
@@ -58,13 +58,7 @@ class Agent(gym.Env):
             self.log_returns()
 
         # Get observation.
-        # TODO: change obs to fit observation_space
-        ghast, fireball = self.get_observation()
-        if fireball == None:
-            observationData = np.array([ghast, fireball, None])
-        else:
-            observationData = np.array([ghast, fireball, fireball.velocity])
-        self.obs = observationData
+        self.obs = self.get_observation()
 
         return self.obs
 
@@ -86,8 +80,8 @@ class Agent(gym.Env):
         if action[0] > 0:
             self.virtualWorld.player.attack()
 
-        self.update_world()# update with new cmd
-        self.update_rewards() 
+        self.virtualWorld.update_world()# update with new cmd
+        self.virtualWorld.update_rewards() 
         self.episode_step += 1
 
         # Get observation.
@@ -104,7 +98,36 @@ class Agent(gym.Env):
         """
         gets observationData from notminecraft world
         """
-        return self.virtualWorld.observe()
+        ghast, fireball = self.virtualWorld.observe() # get observation from notminecraft world
+
+        obs = np.zeros((3 * self.obs_size, )) # initialize obs np array
+
+        # get ghast and fireball positions (relative to player)
+        if ghast != None:
+            # get ghast position from virtual world
+            obs[0] = ghast.transform.get_position()[0]
+            obs[1] = ghast.transform.get_position()[1]
+            obs[2] = ghast.transform.get_position()[2]
+        if fireball != None:
+            # get fireball position from virtual world
+            obs[3] = fireball.transform.get_position()[0]
+            obs[4] = fireball.transform.get_position()[1]
+            obs[5] = fireball.transform.get_position()[2]
+
+            # get fireball velocity from virtual world
+            obs[6] = fireball.velocity.get_position()[0]
+            obs[7] = fireball.velocity.get_position()[1]
+            obs[8] = fireball.velocity.get_position()[2]
+
+        # TODO: normalize values
+
+        print(obs)
+        return obs
+
+    def normalizeObservation(self):
+        ghast, fireball = self.get_observation()
+        observationsData = np.array([ghast.transform[0], ghast.transform[1], ghast.transform[2], fireball])
+        return
 
     def log_returns(self):
         """
