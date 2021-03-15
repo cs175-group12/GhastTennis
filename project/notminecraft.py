@@ -81,7 +81,7 @@ class world:
         #print(self.closestGhast.transform.position)
 
     def update(self):
-        while(self.time < 20): #going to do avg of 3 runs
+        while(self.time < 40): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
@@ -382,7 +382,7 @@ class agent(entity):                                          #max turn speed is
         if(self.cmd[4] > 0):
             self.attack()
         
-        print("yaw is ", self.transform.yaw)
+        #print("yaw is ", self.transform.yaw)
         return
 
     def turn(self,d_pitch, d_yaw):
@@ -520,7 +520,7 @@ def test5():
 import neuralnetdebug as nn
 def test6():
     n = nn.NetworkV3([1])
-    n.loadtxt(114)
+    n.loadtxt(118)
     sekai = world()
     sekai.player.set_AI(n.predict)
     sekai.start()
@@ -534,7 +534,7 @@ def test7():
 if(__name__ == "__main__"):
     starttime = time.time()
     #test4()
-    test7()
+    test6()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 
