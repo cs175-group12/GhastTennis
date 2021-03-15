@@ -117,7 +117,7 @@ class Agent():
         # self.summonGhast(x, 3, -20)
 
         # Summon a ghast randomly around the player.
-        degree = random.randint(0, 359)
+        degree = random.randint(-180, 179)
         self.summonGhastAroundPlayer(degree, 20, 3)
 
     def takeAction(self, world_state):
@@ -244,14 +244,14 @@ class Agent():
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
-        Summon a Ghast at a certain degree [0-360) relative to the player.
+        Summon a Ghast at a certain degree [-180,180) relative to the player.
         Assume the player is facing north and is at x=0, z=0.
         If stationary, then the summoned Ghast will be inside a minecart.
         '''
         
-        assert (degree >= 0 and degree < 360)
-        x = distance * math.cos(math.radians(degree - 90))
-        z = distance * math.sin(math.radians(degree - 90))
+        assert (degree >= -180 and degree < 180)
+        x = distance * math.cos(math.radians(degree - 270))
+        z = distance * math.sin(math.radians(degree - 270))
         yaw = degree
         self.summonGhast(x, y, z, yaw, stationary)
 
