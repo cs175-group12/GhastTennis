@@ -73,6 +73,15 @@ class Agent(gym.Env):
             done: <bool> indicates terminal state
             info: <dict> dictionary of extra information
         """
+        # Get observation.
+        self.obs = self.get_observation
+        print(f"player's observation: {self.virtualWorld.player.obseravtion}")
+
+        # TODO: check if notminecraft world is done for now just set to false
+        done = False
+
+        # Run action:
+
         # pitch/turn
         self.virtualWorld.player.turn(action[2], action[3])
 
@@ -84,21 +93,16 @@ class Agent(gym.Env):
         self.virtualWorld.update_rewards() 
         self.episode_step += 1
 
-        # Get observation.
-        ghast, fireball = self.get_observation()
-        observationData = np.array([ghast, fireball, fireball.velocity])
-        self.obs = observationData
-
         # Check reward.
-        self.reward = self.virtualWorld.score
+        reward = self.virtualWorld.score
 
-        return self.obs, reward
+        return self.obs, reward, done, dict()
 
     def get_observation(self):
         """
-        gets observationData from notminecraft world
+        gets observationData from notminecraft world and returns a np.array of observation
         """
-        ghast, fireball = self.virtualWorld.observe() # get observation from notminecraft world
+        ghast, fireball = self.virtualWorld.player.obseravtion = self.virtualWorld.observe() # get observation from notminecraft world and also set player's observations
 
         obs = np.zeros((3 * self.obs_size, )) # initialize obs np array
 
@@ -125,8 +129,7 @@ class Agent(gym.Env):
         return obs
 
     def normalizeObservation(self):
-        ghast, fireball = self.get_observation()
-        observationsData = np.array([ghast.transform[0], ghast.transform[1], ghast.transform[2], fireball])
+        # TODO: normalie observation space
         return
 
     def log_returns(self):

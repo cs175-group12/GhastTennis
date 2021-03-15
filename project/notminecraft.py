@@ -342,7 +342,7 @@ class agent(entity):                                          #max turn speed is
         self.pitch = 0
         #cmd tuple format (move amt, strafe amt , pitch amt{-1 to 1}, yaw amt {-1 to 1}, and atk (0=false, 1=true))
         self.cmd = (0,0,0,0,0)
-        self.observation = 0
+        self.observation = [None, None] # changing observation so I don't get an error saying an int is not scriptable anymore
         return
     
     def reset(self):
