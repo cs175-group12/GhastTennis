@@ -371,7 +371,7 @@ class agent(entity):                                          #max turn speed is
         self.cmd = self.brain(self.observationData)
 
         #normalize from sigmoid to -1 to 1
-        
+        # self.cmd *= np.asarray([0,0,1,1,1]) # restrict player movement
         self.cmd = self.cmd * 2 - 1     
 
         self.turn(self.cmd[2], self.cmd[3])

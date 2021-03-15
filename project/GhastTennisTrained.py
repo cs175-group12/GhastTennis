@@ -16,7 +16,7 @@ def main():
     # layersizes[-1] = 5  #outputsize
     trainedAI = NetworkV3([1])
 
-    trainedAI.loadtxt(0) # load trained agent from files
+    trainedAI.loadtxt(1) # load trained agent from files
 
     runs = 10
 
