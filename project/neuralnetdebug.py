@@ -131,9 +131,9 @@ class NetworkV3:
         self.biases = list()            #bonus connection to each neuron in each layer. same shape as self.neurons
         for i in range(len(layersizes)):
             self.neurons.append(np.zeros( (layersizes[i],1) ))
-            self.biases.append((np.random.rand(layersizes[i],1)-.5)/np.sqrt(self.layersizes[i]))#)/layersizes[i])
+            self.biases.append((np.random.rand(layersizes[i],1)-.5)*2)#)/layersizes[i])
             if(i>0):
-                self.axons.append( (np.random.rand( self.layersizes[i],self.layersizes[i-1] ) -.5)/np.sqrt(self.layersizes[i-1])  ) # / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) 
+                self.axons.append( (np.random.rand( self.layersizes[i],self.layersizes[i-1] ) -.5)*2  ) # / (self.layersizes[i-1]) - 1.0/(2*(self.layersizes[i-1])) ) 
         return
 
     def reproduce(self):
@@ -145,7 +145,6 @@ class NetworkV3:
         return child
 
     def mutate(self, rate, amount = 1):
-        #types of mutations : small change (1%), medium change (5%), big change (15%)
         for i in range(len(self.axons)):
             delta = np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1])
             gamma = (np.random.rand(self.axons[i].shape[0], self.axons[i].shape[1]) -.5) * amount
@@ -195,8 +194,48 @@ class NetworkV3:
             self.layersizes.append(len(self.biases[i]))
             self.neurons.append(np.zeros((len(self.biases[i]),1)))
 
-            
-        
+
+class PerfectNetwork():
+    def __init__(self):
+        self.neurons = list()           #list of row vectors
+        self.axons = list()             #matrix connect neurons[i] to neurons[i+1]. dimension is layersizes[i] , layersizes[i+1]
+        self.layersizes = layersizes = [9,5]    #the count of neurons in each layer
+        self.biases = list()            #bonus connection to each neuron in each layer. same shape as self.neurons
+        for i in range(len(layersizes)):
+            self.neurons.append(np.zeros( (layersizes[i],1) ))
+            self.biases.append(np.zeros((layersizes[i],1)))
+        self.axons.append(np.asarray(
+            [[0,0,-1,0,0,0,0,0,0],
+            [0,0,0,.5,0,0,0,0,0],
+            [0,-1,0,0,0,0,0,0,0],
+            [1,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,-1,0,0,0]] , dtype = np.float32))
+        self.biases[1][4,0] = 2.5
+        return
+
+    def predict(self, input):
+        '''
+        def predict(self, input):
+        input should be a numpy array of shape inputsize,1 . remember to normalize input to 0-1 range
+        '''
+        np.copyto(self.neurons[0], input)
+        for i in range(1,len(self.layersizes)):
+            self.neurons[i] = Sigmoid(  self.axons[i-1] @ self.neurons[i-1] + self.biases[i])       #nk km nm
+        return np.copy(self.neurons[-1])
+
+#wrapper for network v3 to be used in network v4
+#takes in a mask for input (of same dimension) and outputs 1
+class Subnetwork():
+    #mask must be an array of 1's and 0's
+    def __init__(self,mask):
+        input_0_size = len(mask)
+        self.inputsize = np.sum(mask)
+        self.mask = mask
+
+    
+class NeuralNetV4():
+    def __init__(self,inputsize,outputsize):
+        self.networks = []
         
 
     

@@ -81,7 +81,7 @@ class world:
         #print(self.closestGhast.transform.position)
 
     def update(self):
-        while(self.time < 20): #going to do avg of 3 runs
+        while(self.time < 40): #going to do avg of 3 runs
             self.update_world()
             self.update_agent()
             self.update_rewards()
@@ -241,6 +241,7 @@ class transform:
         dpitch = pitch - self.pitch
         dyaw = yaw - self.yaw
         self.rotate(dpitch,dyaw)
+    
 
 
 class entity:                                                                               #base class
@@ -314,7 +315,7 @@ class ghast(entity):                                                            
     
     def teleport(self):
         #f it lets just do it deterministically
-        self.transform.position = self.spawns[self.ghastsKilled].copy()
+        self.transform.position = self.spawns[self.ghastsKilled%8].copy()
 
         #patched to make sure ghast doesnt spawn above player
         # offset = np.random.random_sample((3)) * 60 - 30
@@ -520,15 +521,41 @@ def test5():
 import neuralnetdebug as nn
 def test6():
     n = nn.NetworkV3([1])
-    n.loadtxt(114)
+    n.loadtxt(118)
     sekai = world()
     sekai.player.set_AI(n.predict)
     sekai.start()
 
+def test7():
+    n = nn.PerfectNetwork()
+    sekai = world()
+    sekai.player.set_AI(n.predict)
+    sekai.start()
+
+def test8():
+    t = transform()
+    t.set_rotation(0,90)
+    print(t.forward)
+    t.set_rotation(0,180)
+    print(t.forward)
+    t.set_rotation(0,270)
+    print(t.forward)
+
+def test9():
+    t = transform()
+    print(t.forward)
+    t.set_rotation(0,0)
+    print(t.forward)
+    t.set_rotation(-90,0)
+    print(t.forward)
+    t.set_rotation(90,0)
+    print(t.forward)
+
 if(__name__ == "__main__"):
     starttime = time.time()
     #test4()
-    test6()
+    #test6()
+    test9()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 

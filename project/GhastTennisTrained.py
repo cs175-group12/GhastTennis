@@ -7,12 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import MalmoPython
 import notminecraft
-from neuralnetdebug import NetworkV3
+from neuralnetdebug import NetworkV3, PerfectNetwork
 
 def main():
     # Load NN data.
-    trainedAI = NetworkV3([1])
-    trainedAI.loadtxt(114)
+    trainedAI = PerfectNetwork()
+    #trainedAI.loadtxt(119) # load trained agent from files
 
     # Create agent.
     runs = 10
@@ -127,22 +127,37 @@ class Agent():
 
         # Get observation from the Minecraft world.
         player, ghasts, fireballs = self.getObservations(world_state)
-        if len(ghasts) == 0 or len(fireballs) == 0: # If either are missing do nothing
+
+        #if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
+        #    return
+
+        if len(ghasts) == 0:
             return
+        useghastasfireball = False
+        if len(fireballs) == 0:
+            useghastasfireball = True
 
         # Parse player data.
         playerPos = np.array([player['x'], player['y'], player['z']])
-        pitch = player['pitch']
-        yaw = player['yaw']
+        pitch = np.clip(player['pitch'] , -89, 89)
+        yaw = -(player['yaw'] +180 ) %360.0
 
         # Get closest ghast and fireball.
         ghast = self.getClosestEntity(playerPos, ghasts)
-        fireball = self.getClosestEntity(playerPos, fireballs)
+        #fireball = self.getClosestEntity(playerPos, fireballs)
 
-		# Get ghast position and fireball position & velocity.
+		    # Get ghast position and fireball position & velocity.
         ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
-        fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
-        fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
+        fireball = 0 
+        fireballPos = 0
+        fireballVelocity = 0
+        if useghastasfireball == False:
+            fireball = self.getClosestEntity(playerPos, fireballs)
+            fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
+            fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
+        else:
+            fireballPos = ghastPos.copy()
+            fireballVelocity = np.array([0,0,0])
 
         # Set the player position and rotation in the virtual world.
         self.virtualWorld.player.transform.position = playerPos
@@ -160,7 +175,7 @@ class Agent():
         # Parse the output to Malmo format.
         move = f"move {cmd[0][0] * 2 -1 }"
         strafe = f"strafe {cmd[1][0] * 2 - 1}"
-        pitch = f"pitch {cmd[2][0] * 2 - 1}"
+        pitch = f"pitch {cmd[2][0] *-2 + 1}"
         turn = f"turn {cmd[3][0] * 2 - 1}"
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 

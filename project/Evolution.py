@@ -10,11 +10,11 @@ import os
 warnings.filterwarnings("ignore")
 
 #multiprocessing.set_start_method("spawn",True)
-population = 64 #power of 2, population *3/4 must be divisible by threads
+population = 128 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
 generations = 100
-saveas = 114
-mutation_factor = 10
+saveas = 119
+mutation_factor = 3
 AIsAndWorlds = list()
 
 #ideas for improvement : set a new random seed in reset each time, run 3 samples and average scores
@@ -42,29 +42,41 @@ def main():
 
     #initialize random gen 1
     for i in range(population):
-        layersizes = np.random.randint(low = 81, high = 729, size = np.random.random_integers(5,10))
+        layersizes = np.random.randint(low = 9, high = 10, size = np.random.random_integers(low=2,high=3))
         layersizes[0] = 9   #inputsize
         layersizes[-1] = 5  #outputsize
         n = NetworkV3(layersizes)
         AIsAndWorlds.append([n, notminecraft.world()])
         AIsAndWorlds[i][1].prepare_pickling() #prepare pickling unnecessary with no processes
     
+    #load last best due to error failure
+    # loadlast = NetworkV3([1])
+    # loadlast.loadtxt(117)
+    # AIsAndWorlds[0][0] = loadlast
+    # AIsAndWorlds[0][1].player.set_AI(loadlast.predict)
+
+    errcount = 0
+
     args = []
         
     for i in range(0, threads):
         args.append([i*(int(population/threads)),(i+1)*(int(population/threads)),Q,AIsAndWorlds])
 
-    highscorer = 0
-    highscore = 0
 
     for g in range(generations):
 
         #evaluate (can be threaded)
         
-        #disabling multithreading 
-        with mp.Pool(processes=threads) as pool:
-            pool.starmap(run_worlds,args)
-        
+        try:
+            with mp.Pool(processes=threads) as pool:
+                pool.starmap(run_worlds,args)
+        except(Exception):
+            errcount += 1
+            if(errcount>=3):
+                AIsAndWorlds[-1][0].save(saveas*-1)
+                np.save("Highscores/Highscore_%d,_generations_%d,_population_%d,mutation_factor_%d" % (saveas,generations,population,mutation_factor), np.asarray(highscores))
+
+
         if(g==1): #we dont need to reevaluate the top 1/4 each time, as they already have been evaluated
             args.clear()
             for i in range(0, threads):
@@ -98,7 +110,7 @@ def main():
         print("Generation %d : %f "%(g,highscores[g]))
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
-    print(AIsAndWorlds[-1][0].save(saveas))
+    AIsAndWorlds[-1][0].save(saveas)
     np.save("Highscores/Highscore_%d,_generations_%d,_population_%d,mutation_factor_%d" % (saveas,generations,population,mutation_factor), np.asarray(highscores))
 
         
@@ -114,7 +126,7 @@ def ReplaceAI(dest, src):
     AIsAndWorlds[dest][1].player.set_AI(AIsAndWorlds[dest][0].predict)
 
 def RandomizeAI(dest):
-    layersizes = np.random.randint(low = 81, high = 729, size = np.random.random_integers(5,10))
+    layersizes = np.random.randint(low = 9, high = 10, size = np.random.random_integers(low=2,high=3))
     layersizes[0] = 9   #inputsize
     layersizes[-1] = 5  #outputsize
     n = NetworkV3(layersizes)
