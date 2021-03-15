@@ -58,7 +58,13 @@ class Agent(gym.Env):
             self.log_returns()
 
         # Get observation.
-        self.obs = self.get_observation() # get player's observations
+        # TODO: change obs to fit observation_space
+        ghast, fireball = self.get_observation()
+        if fireball == None:
+            observationData = np.array([ghast, fireball, None])
+        else:
+            observationData = np.array([ghast, fireball, fireball.velocity])
+        self.obs = observationData
 
         return self.obs
 
@@ -86,7 +92,7 @@ class Agent(gym.Env):
 
         # Get observation.
         ghast, fireball = self.get_observation()
-        observationData = np.array(ghast, fireball, fireball.velocity)
+        observationData = np.array([ghast, fireball, fireball.velocity])
         self.obs = observationData
 
         # Check reward.
