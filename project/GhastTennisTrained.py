@@ -17,8 +17,8 @@ def main():
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
-    for _ in range(runs):
-        agent.start()
+    for i in range(runs):
+        agent.start(i + 1)
 
 
 
@@ -37,12 +37,13 @@ class Agent():
             print(self.agent_host.getUsage())
             exit(1)
 
-    def start(self):
+    def start(self, run_iteration):
         """
         Start the agent.
         """
 
         # Initialize Malmo and the Minecraft world.
+        print(f'RUN {run_iteration} STARTED')
         world_state = self.initMalmo()
         self.initWorld()
 
@@ -53,16 +54,16 @@ class Agent():
 
         # Take action while the mission is running.
         while world_state.is_mission_running:
-            print(".", end="")
             time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
             self.takeAction(world_state)
             for error in world_state.errors:
-                print("Error:", error.text)
+                print('Error:', error.text)
+                exit(1)
 
         # End mission.
+        print(f'RUN {run_iteration} ENDED')
         print()
-        print("Mission ended")
 
     def initMalmo(self):
         """
@@ -70,10 +71,9 @@ class Agent():
         """
 
         # Load the XML file and create mission spec & record.
-        print("Initializing...")
         mission_file = './mission.xml'
         with open(mission_file, 'r') as f:
-            print("Loading mission from %s" % mission_file)
+            print(f'Loading mission from {mission_file}')
             mission_xml = f.read()
             my_mission = MalmoPython.MissionSpec(mission_xml, True)
             my_mission_record = MalmoPython.MissionRecordSpec()
@@ -88,7 +88,7 @@ class Agent():
                 break
             except RuntimeError as e:
                 if retry == max_retries - 1:
-                    print("Error starting mission:", e)
+                    print('Error starting mission:', e)
                     exit(1)
                 else:
                     time.sleep(2)
@@ -99,7 +99,8 @@ class Agent():
             time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
             for error in world_state.errors:
-                print("\nError:", error.text)
+                print('Error:', error.text)
+                exit(1)
         return world_state
 
     def initWorld(self):
@@ -256,6 +257,7 @@ class Agent():
             self.agent_host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast, Rotation:[{yaw}f, 0f]}}]}}')
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
+        print(f'Summoned ghast at ({x:.2f}, {y:.2f}, {z:.2f}), yaw: {yaw}')
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
