@@ -13,8 +13,8 @@ warnings.filterwarnings("ignore")
 population = 128 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
 generations = 100
-saveas = 118
-mutation_factor = 10
+saveas = 119
+mutation_factor = 3
 AIsAndWorlds = list()
 
 #ideas for improvement : set a new random seed in reset each time, run 3 samples and average scores
@@ -50,10 +50,10 @@ def main():
         AIsAndWorlds[i][1].prepare_pickling() #prepare pickling unnecessary with no processes
     
     #load last best due to error failure
-    loadlast = NetworkV3([1])
-    loadlast.loadtxt(117)
-    AIsAndWorlds[0][0] = loadlast
-    AIsAndWorlds[0][1].player.set_AI(loadlast.predict)
+    # loadlast = NetworkV3([1])
+    # loadlast.loadtxt(117)
+    # AIsAndWorlds[0][0] = loadlast
+    # AIsAndWorlds[0][1].player.set_AI(loadlast.predict)
 
     errcount = 0
 

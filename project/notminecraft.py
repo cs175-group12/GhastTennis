@@ -314,7 +314,7 @@ class ghast(entity):                                                            
     
     def teleport(self):
         #f it lets just do it deterministically
-        self.transform.position = self.spawns[self.ghastsKilled].copy()
+        self.transform.position = self.spawns[self.ghastsKilled%8].copy()
 
         #patched to make sure ghast doesnt spawn above player
         # offset = np.random.random_sample((3)) * 60 - 30
