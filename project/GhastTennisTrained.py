@@ -14,8 +14,8 @@ def main():
 
 
     trainedAI=NetworkV3([])
-    trainedAI = PerfectNetwork()
-    #trainedAI.loadtxt(120) # load trained agent from files
+    #trainedAI = PerfectNetwork()
+    trainedAI.loadtxt(120) # load trained agent from files
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
@@ -141,7 +141,7 @@ class Agent():
         # Parse player data.
         self.playerPos = np.array([player['x'], player['y'], player['z']])
         self.playerPitch = np.clip(player['pitch'] , -89, 89)
-        self.playerYaw = -(player['yaw'] + 180) % 360.0 # Normalize the yaw so 0 = north.
+        self.playerYaw = -(player['yaw'] ) % 360.0 # Normalize the yaw so 0 = north.
 
         # Get closest ghast.
         ghast = self.getClosestEntity(self.playerPos, ghasts)
@@ -172,8 +172,8 @@ class Agent():
         cmd = self.virtualWorld.player.brain(observationData)
 
         # Parse the output to Malmo format.
-        move = f"move {cmd[0][0] * 2 -1 }"
-        strafe = f"strafe {cmd[1][0] * 2 - 1}"
+        move = f"move {cmd[0][0] * -2 +1 }"
+        strafe = f"strafe {cmd[1][0] * -2 + 1}"
         pitch = f"pitch {cmd[2][0] *-2 + 1}"
         turn = f"turn {cmd[3][0] * 2 - 1}"
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"

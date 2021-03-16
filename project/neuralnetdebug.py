@@ -205,7 +205,7 @@ class PerfectNetwork():
             self.neurons.append(np.zeros( (layersizes[i],1) ))
             self.biases.append(np.zeros((layersizes[i],1)))
         self.axons.append(np.asarray(
-            [[0,0,-1,0,0,0,0,0,0],
+            [[0,0,1,0,0,0,0,0,0],
             [0,0,0,.5,0,0,0,0,0],
             [0,-1,0,0,0,0,0,0,0],
             [1,0,0,0,0,0,0,0,0],
