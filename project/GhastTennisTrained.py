@@ -179,7 +179,7 @@ class Agent():
         ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
         fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity, direction=True)
-        observationData = np.array([ghastPoint,fireballPoint,fireballVel]).reshape(9, 1)
+        observationData = np.array([ghastPoint, fireballPoint, fireballVel]).reshape(9, 1)
 
         # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
@@ -192,16 +192,16 @@ class Agent():
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 
         # Run the output.
-        # self.agent_host.sendCommand(move)
-        # #time.sleep(0.1)
-        # self.agent_host.sendCommand(strafe)
-        # #time.sleep(0.1)
-        # self.agent_host.sendCommand(pitch)
-        # #time.sleep(0.1)
-        # self.agent_host.sendCommand(turn)
-        # #time.sleep(0.1)
-        # self.agent_host.sendCommand(attack)
-        # time.sleep(0.05)
+        self.agent_host.sendCommand(move)
+        #time.sleep(0.1)
+        self.agent_host.sendCommand(strafe)
+        #time.sleep(0.1)
+        self.agent_host.sendCommand(pitch)
+        #time.sleep(0.1)
+        self.agent_host.sendCommand(turn)
+        #time.sleep(0.1)
+        self.agent_host.sendCommand(attack)
+        time.sleep(0.05)
 
     def getObservations(self, world_state):
         '''
