@@ -39,7 +39,7 @@ After the learner was done, we needed a way to accelerate the training process. 
 
 <center><small>The entities within notminecraft.py.</small></center>
 
-Initially, there were several ideas on how to do selection and scoring: adding a bonus if it was looking close to the ghast and fireball, punishing it for looking straight up or down, small rewards for almost hitting the fireball, doing boom and bust cycles with the population over time, etc.. In the final version, only hitting a fireball and hitting a ghast with a fireball were rewarded. The selection function was a bit more involved. The array is sorted by score, ascending, and the agents “reproduce” according to $log_2(index) - 1$. For example, in a population of 128 agents, the best ones will reproduce 6 times. The 3rd quartile is 50/50 mutated in place or scrambled, to prevent it from becoming a monoculture.
+Initially, there were several ideas on how to do selection and scoring: adding a bonus if it was looking close to the ghast and fireball, punishing it for looking straight up or down, small rewards for almost hitting the fireball, doing boom and bust cycles with the population over time, etc.. In the final version, only hitting a fireball and hitting a ghast with a fireball were rewarded. The selection function was a bit more involved. The array is sorted by score, ascending, and the agents “reproduce” according to $$log_2(index) - 1$$. For example, in a population of 128 agents, the best ones will reproduce 6 times. The 3rd quartile is 50/50 mutated in place or scrambled, to prevent it from becoming a monoculture.
 
 ![](/assets/images/approach4.png)
 
@@ -53,7 +53,7 @@ I was about ready to give up on neural networks at this point. I even replaced m
 
 <center><small>The “Hand Made” Network (scored 275 in the simulation).</small></center>
 
-In the final 3 trained agents, I set the maximum layer size to the input size, and the maximum number of hidden layers to 2. Instead of having values initialized between $-1/layersize$ and $1/layersize$, they were expanded to be between -1 and 1. The best bot previous to this scored 190 in the simulation. The best bot after that scored 780, and is the one shown in our video.
+In the final 3 trained agents, I set the maximum layer size to the input size, and the maximum number of hidden layers to 2. Instead of having values initialized between $$-1/layersize$$ and $$1/layersize$$, they were expanded to be between -1 and 1. The best bot previous to this scored 190 in the simulation. The best bot after that scored 780, and is the one shown in our video.
 
 Still, there was some weirdness that needed sorting out with how Minecraft and Malmo handle space - their coordinate system is strange, -z seems to be forwards. Also Malmo reports pitch and yaw in a way that doesn’t match their documentation. With some tweaking to how input and output are received and fed between the agent and Malmo, we were able to get good performance out of them - though I’m still not 100% sure if it’s indicative of how they performed in the simulation.
 
