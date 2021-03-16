@@ -11,10 +11,11 @@ from neuralnetdebug import NetworkV3, PerfectNetwork
 
 def main():
     # Load NN data.
-    # trainedAI = NetworkV3([1])
-    trainedAI = PerfectNetwork()
-    #trainedAI.loadtxt(119) # load trained agent from files
 
+
+    trainedAI=NetworkV3([])
+    trainedAI = PerfectNetwork()
+    #trainedAI.loadtxt(120) # load trained agent from files
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
@@ -129,6 +130,7 @@ class Agent():
         degree = random.randint(0, 359)
         self.summonGhastAroundPlayer(degree, 20, 3)
 
+
     def takeAction(self, world_state):
         '''
         Compute the next action for the agent to take.
@@ -176,10 +178,11 @@ class Agent():
         self.virtualWorld.player.transform.set_rotation(self.playerPitch, self.playerYaw) 
 
         # Create the observation input for the NN.
-        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
-        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)
-        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity, direction=True)
-        observationData = np.array([ghastPoint, fireballPoint, fireballVel]).reshape(9, 1)
+        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos) * np.asarray([1,1,1])
+        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)* np.asarray([1,1,1])
+        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)* np.asarray([1,1,1])
+        observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
+
 
         # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
@@ -284,6 +287,7 @@ class Agent():
         z = distance * math.sin(math.radians(degree - 90))
         yaw = degree if degree <= 180 else degree - 360 # Fix yaw degree for NN input.
         self.summonGhast(x + self.playerPos[0], y, z + self.playerPos[2], yaw, stationary)
+
 
 
 
