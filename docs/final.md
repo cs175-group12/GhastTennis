@@ -23,25 +23,25 @@ The neural network started out as a Jupyter Notebook version based off of a Yout
 
 ![](/assets/images/approach1.png)
 
-<p align=”center”>V1’s predict function attempting to use various activation functions with no bias.</p>
+<center><small>V1’s predict function attempting to use various activation functions with no bias.</small></center>
 
 For debugging purposes, the neural network was moved into an actual `.py` file so we can use breakpoints. The neural network was redefined to be more general and has a variable shape, making it version 2. Once that was working, one of our team members tried learning PyTorch with the eventual goal of doing evolutionary learning. He quickly discovered that PyTorch was very geared towards gradient descent and copying a network using PyTorch could be huge hassle. In the end, he decided not to use PyTorch and adjusted our already-working network for evolutionary learning, titling it version 3.
 
 ![](/assets/images/approach2.png)
 
-<p align=”center>Final version of the predict function in V3.</p>
+<center><small>Final version of the predict function in V3.</small></center>
 
 After the learner was done, we needed a way to accelerate the training process. The `notminecraft.py` script was created with the goal of (from the agent’s perspective) perfectly emulating the observations it would get from real Minecraft. It also allows us to inject scoring logic and run it 46 times faster, per process. A good amount of time was spent to optimize this “virtual world”. Implementing the `quaternionic` Python module improved the speed 100% over `pyquaternion` module, which was used at first to handle rotations. We ran the trained agents in real Minecraft and noticed some bugs that had to be fixed, such as clamping the pitch. The architecture of the simulation is based on Unity (a game engine), with a base `Entity` class that has a `transform`, `start`, and `update` functions. Entities in the simulation are `Fireball`s, `Ghast`s, and the `Agent` itself. The `World` class represents a singular simulation, and due to this, several simulations can be run in parallel using multiprocessing. It also includes utility functions, such as `SphereLineIntersect`, which is used for hit detection against fireballs. 
 
 ![](/assets/images/approach3.png)
 
-<p align=”center”>The entities within notminecraft.py.</p>
+<center><small>The entities within notminecraft.py.</small></center>
 
 Initially, there were several ideas on how to do selection and scoring: adding a bonus if it was looking close to the ghast and fireball, punishing it for looking straight up or down, small rewards for almost hitting the fireball, doing boom and bust cycles with the population over time, etc.. In the final version, only hitting a fireball and hitting a ghast with a fireball were rewarded. The selection function was a bit more involved. The array is sorted by score, ascending, and the agents “reproduce” according to $log_2(index) - 1$. For example, in a population of 128 agents, the best ones will reproduce 6 times. The 3rd quartile is 50/50 mutated in place or scrambled, to prevent it from becoming a monoculture.
 
 ![](/assets/images/approach4.png)
 
-<p align=”center”>The Natural Selection Algorithm, operating on a list of AI sorted by score.</p>
+<center><small>The Natural Selection Algorithm, operating on a list of AI sorted by score.</small></center>
 
 The biggest hurdles I ran into were overfitting and the lack of randomness no matter what I did from `numpy`. To start with the latter, even when training didn’t utilize sub processes, scores were more indicative of what AI got lucky ghast spawns either right above or right below them - these AI didnt have results that translated between runs and since luck isn’t heritable, they didn’t learn much either. To remedy that I made a list of spawn points, and the ghasts always start at the first then progress through it as they are killed and respawn. Ultimately this training was still not yielding good results though - agents would slowly spin and look up or down , coincidentally getting the first 3 without really responding to input after a literal year of simulated training time. 
 
@@ -49,7 +49,7 @@ I was about ready to give up on neural networks at this point. I even replaced m
 
 ![](/assets/images/approach5.png)
 
-<p align=”center”>The “Hand Made” Network (scored 275 in the simulation).</p>
+<center><small>The “Hand Made” Network (scored 275 in the simulation).</small></center>
 
 In the final 3 trained agents, I set the maximum layer size to the input size, and the maximum number of hidden layers to 2. Instead of having values initialized between $-1/layersize$ and $1/layersize$, they were expanded to be between -1 and 1. The best bot previous to this scored 190 in the simulation. The best bot after that scored 780, and is the one shown in our video.
 
@@ -67,20 +67,23 @@ Ultimately I think our bots limitations stem from the precision and timing requi
 
 ### Quantitative
 
-<p align=”center”>Left: Unreliable randomization, rewards from looking towards Ghasts and fireballs.<br>
-Right: Deeper neural networks, more random initialization (-1 to 1).</p>
+<center>Left: Unreliable randomization, rewards from looking towards Ghasts and fireballs.<br>
+Right: Deeper neural networks, more random initialization (-1 to 1).</center>
 
-<p align=”center”><img src=”/assets/images/1-l.png”><img src=”/assets/images/1-r.png”></p>
+:-------------------------:|:-------------------------:
+![](/assets/images/1-l.png){:width="300px"}  |  ![](/assets/images/1-r.png){:width="300px"}
 
-<p align=”center”>Left: Reduced the number of layers from 5-10 to 1-2, reduced maxsize from 783 to 9.<br>
-Right: Evaluation time extended from 20s to 40s.</p>
+<center>Left: Reduced the number of layers from 5-10 to 1-2, reduced maxsize from 783 to 9.<br>
+Right: Evaluation time extended from 20s to 40s.</center>
 
-<p align=”center”><img src=”/assets/images/2-l.png”><img src=”/assets/images/2-r.png”></p>
+:-------------------------:|:-------------------------:
+![](/assets/images/2-l.png){:width="300px"}  |  ![](/assets/images/2-r.png){:width="300px"}
 
-<p align=”center”>Left: Ghast spawns are looped properly instead of throwing errors when all were killed.<br>
-Right: Same thing, but `forward` is (0, 0, -1), like real Minecraft.</p>
+<center>Left: Ghast spawns are looped properly instead of throwing errors when all were killed.<br>
+Right: Same thing, but forward is (0, 0, -1), like real Minecraft.</center>
 
-<p align=”center”><img src=”/assets/images/2-l.png”><img src=”/assets/images/2-r.png”></p>
+:-------------------------:|:-------------------------:
+![](/assets/images/3-l.png){:width="300px"}  |  ![](/assets/images/3-r.png){:width="300px"}
 
 ### Qualitative 
 
