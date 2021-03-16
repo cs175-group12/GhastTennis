@@ -420,6 +420,7 @@ class agent(entity):                                          #max turn speed is
             self.world.destroy(other) # fireballs blow up when they hit player
             self.world.reward_explode()
 
+
 def testAI(observations):
     print(observations[1])
     return (0,0,0,0,0)
