@@ -158,7 +158,7 @@ class NetworkV3:
     def predict(self, input):
         '''
         def predict(self, input):
-        input should be a numpy array of shape inputsize,1 . remember to normalize input to 0-1 range
+        input should be a numpy array of shape inputsize,1 . 
         '''
         np.copyto(self.neurons[0], input)
         for i in range(1,len(self.layersizes)):
