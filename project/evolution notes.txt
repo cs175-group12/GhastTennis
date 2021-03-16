@@ -1,0 +1,19 @@
+103 fixed the clamping on pitch
+104 had both punishment for staring at the ground and reward for aiming at ghast
+105 has revised ghast spawning, and only punishment for staring at the ground.the agent still stares into space
+106 i used better random seeding apparently and both rewards and punishments for where it looks.
+107 still fixing random, gonna use random state maybe. biases mutate too. no longer stares at ceiling
+108 pentupled reward and punishments based on lookdir
+109 not multithreaded, plateau early on and stay stagnant. doesnt translate between runs still...
+110 purely deterministic, hand designed ghast spawns. accidentally 109 , peaked and plateued at 155
+	at least the gains translate kinda...
+111 bigger, deeper neural nets. from 3 to 7 layers to 5 to 10, and from sizes 9 to 81 to 91 to 729
+	considering some sort of computational graph network instead of neural nets.
+112 complete random. nothing better than 105
+113 complete random. random initialization now between -.5/sqrt(inputsize) and positive that. bad results
+114 fixed biasse to average to 0 , return to evolution, fixed axons to scale to 1/sqrt(input)
+115 i forgot
+116 reduced layers and complexity - overfitting identified
+117 more training, 410 peak, some errors
+118 extended evaluation time, suspected max score hit after 100 gen no improvement on 117
+119 the errors were due to hitting all the ghasts. fixed, training much better now
