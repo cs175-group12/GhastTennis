@@ -23,3 +23,6 @@
 ### <b>networks:</b> folder that stores saved NN from Evolution.py
 
 ### <b>highscores:</b> folder that stored saved highscored from NN ran in Evolution.py
+
+#
+
