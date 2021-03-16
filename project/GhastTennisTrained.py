@@ -29,6 +29,9 @@ class Agent():
         # Agent Parameters
         self.trainedAI = trainedAI
         self.virtualWorld = None
+        self.playerPos = None
+        self.playerPitch = 0
+        self.playerYaw = 0
 
         # Malmo Host
         self.agent_host = MalmoPython.AgentHost()
@@ -111,6 +114,10 @@ class Agent():
         Clean the world, make the player invincible, and spawn ghasts.
         '''
 
+        self.playerPos = np.array([0, 3, 0])
+        self.playerYaw = 0
+        self.playerPitch = 0
+
         self.cleanWorld()
         self.makeInvincible()
         time.sleep(0.1)
@@ -145,12 +152,12 @@ class Agent():
             useghastasfireball = True
 
         # Parse player data.
-        playerPos = np.array([player['x'], player['y'], player['z']])
-        pitch = np.clip(player['pitch'] , -89, 89)
-        yaw = -(player['yaw'] +180 ) %360.0
+        self.playerPos = np.array([player['x'], player['y'], player['z']])
+        self.playerPitch = np.clip(player['pitch'] , -89, 89)
+        self.playerYaw = -(player['yaw'] + 180) % 360.0 # Normalize the yaw so 0 = north.
 
         # Get closest ghast and fireball.
-        ghast = self.getClosestEntity(playerPos, ghasts)
+        ghast = self.getClosestEntity(self.playerPos, ghasts)
         #fireball = self.getClosestEntity(playerPos, fireballs)
 
 		    # Get ghast position and fireball position & velocity.
@@ -159,7 +166,7 @@ class Agent():
         fireballPos = 0
         fireballVelocity = 0
         if useghastasfireball == False:
-            fireball = self.getClosestEntity(playerPos, fireballs)
+            fireball = self.getClosestEntity(self.playerPos, fireballs)
             fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
             fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
         else:
@@ -167,14 +174,15 @@ class Agent():
             fireballVelocity = np.array([0,0,0])
 
         # Set the player position and rotation in the virtual world.
-        self.virtualWorld.player.transform.position = playerPos
-        self.virtualWorld.player.transform.set_rotation(pitch,yaw) 
+        self.virtualWorld.player.transform.position = self.playerPos
+        self.virtualWorld.player.transform.set_rotation(self.playerPitch, self.playerYaw) 
 
         # Create the observation input for the NN.
         ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos) * np.asarray([1,1,1])
         fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)* np.asarray([1,1,1])
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)* np.asarray([1,1,1])
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
+
 
         # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
@@ -263,22 +271,22 @@ class Agent():
             self.agent_host.sendCommand(f'chat /summon minecart {x} {y} {z} {{NoGravity:1, Passengers:[{{id:Ghast, Rotation:[{yaw}f, 0f]}}]}}')
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
-        print(f'Summoned ghast at ({x:.2f}, {y:.2f}, {z:.2f}), yaw: {yaw}')
+        print(f'Summoned ghast at ({x:.2f}, {y:.2f}, {z:.2f}), yaw: {yaw:.2f}')
         time.sleep(0.1)
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
         Summon a Ghast at a certain degree [0,360) relative to the player.
-        Assume the player is facing north and is at x=0, z=0.
         If degree is 0, then the ghast will be summoned in front of the player.
         If stationary, then the summoned Ghast will be inside a minecart.
         '''
         
         assert degree >= 0 and degree < 360
+        degree += self.playerYaw
         x = distance * math.cos(math.radians(degree - 90))
         z = distance * math.sin(math.radians(degree - 90))
         yaw = degree if degree <= 180 else degree - 360 # Fix yaw degree for NN input.
-        self.summonGhast(x, y, z, yaw, stationary)
+        self.summonGhast(x + self.playerPos[0], y, z + self.playerPos[2], yaw, stationary)
 
 
 
