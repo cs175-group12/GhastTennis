@@ -15,11 +15,6 @@
         </ServerInitialConditions>
         <ServerHandlers>
             <FlatWorldGenerator generatorString="3;3*minecraft:stone_slab;2;"/>
-            <!-- <DrawingDecorator>
-                	<DrawCuboid x1="-1" y1="3" z1="1" x2="1" y2="3" z2="-1" type="stone_slab" />
-                    <DrawCuboid x1="0" y1="3" z1="0" x2="0" y2="3" z2="-1" type="air" />
-                    <DrawCuboid x1="-1" y1="5" z1="1" x2="1" y2="5" z2="-1" type="stone_slab" />
-            </DrawingDecorator> -->
             <ServerQuitFromTimeUp timeLimitMs="30000"/>
             <ServerQuitWhenAnyAgentFinishes/>
         </ServerHandlers>
@@ -29,13 +24,15 @@
         <Name>GhastTennisAgent</Name>
         <AgentStart>
             <Placement x="0.5" y="3" z="0.5" yaw="180"/>
+            <Inventory>
+                <InventoryItem slot="0" type="diamond_sword"/>
+            </Inventory>
         </AgentStart>
         <AgentHandlers>
             <RewardForDamagingEntity>
                 <Mob type="Ghast" reward="1"/>
             </RewardForDamagingEntity>
             <ChatCommands/>
-            <!-- <DiscreteMovementCommands/> -->
             <ContinuousMovementCommands/>
             <MissionQuitCommands/>
             <ObservationFromNearbyEntities>
