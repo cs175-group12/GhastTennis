@@ -168,7 +168,6 @@ class Agent():
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)* np.asarray([1,1,1])
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
 
-
         # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
 
@@ -274,6 +273,10 @@ class Agent():
         self.summonGhast(x + self.playerPos[0], y, z + self.playerPos[2], yaw, stationary)
 
     def summonGhastRandomly(self, stationary=True):
+        '''
+        Summon a Ghast at a random degree, distance, and height relative to the player.
+        '''
+        
         degree = random.randint(0, 359)
         distance = random.randint(15, 30)
         height = self.playerPos[1] + random.randint(0, 5) # If too high, ghast doesn't attack player?
