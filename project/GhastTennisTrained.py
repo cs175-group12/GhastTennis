@@ -11,6 +11,7 @@ from neuralnetdebug import NetworkV3, PerfectNetwork
 
 def main():
     # Load NN data.
+    # trainedAI = NetworkV3([1])
     trainedAI = PerfectNetwork()
     #trainedAI.loadtxt(119) # load trained agent from files
 
@@ -133,6 +134,9 @@ class Agent():
         #    return
 
         if len(ghasts) == 0:
+            # when there are no ghasts spawn more
+            degree = random.randint(0, 359)
+            self.summonGhastAroundPlayer(degree, 20, 3)
             return
         useghastasfireball = False
         if len(fireballs) == 0:
