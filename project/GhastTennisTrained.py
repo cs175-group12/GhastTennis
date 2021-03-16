@@ -121,13 +121,7 @@ class Agent():
         self.makeInvincible()
         time.sleep(0.1)
 
-        # Summon a ghast randomly in front of the player.
-        # x = random.randint(-10, 10)
-        # self.summonGhast(x, 3, -20)
-
-        # Summon a ghast randomly around the player.
-        degree = random.randint(0, 359)
-        self.summonGhastAroundPlayer(degree, 20, 3)
+        self.summonGhastRandomly()
 
     def takeAction(self, world_state):
         '''
@@ -137,33 +131,24 @@ class Agent():
         # Get observation from the Minecraft world.
         player, ghasts, fireballs = self.getObservations(world_state)
 
-        #if(len(ghasts) == 0 or len(fireballs) == 0): #if either are missing do nothing
-        #    return
-
+        # Summon ghast when there is no more.
         if len(ghasts) == 0:
-            # when there are no ghasts spawn more
-            degree = random.randint(0, 359)
-            self.summonGhastAroundPlayer(degree, 20, 3)
+            self.summonGhastRandomly()
             return
-        useghastasfireball = False
-        if len(fireballs) == 0:
-            useghastasfireball = True
 
         # Parse player data.
         self.playerPos = np.array([player['x'], player['y'], player['z']])
         self.playerPitch = np.clip(player['pitch'] , -89, 89)
         self.playerYaw = -(player['yaw'] + 180) % 360.0 # Normalize the yaw so 0 = north.
 
-        # Get closest ghast and fireball.
+        # Get closest ghast.
         ghast = self.getClosestEntity(self.playerPos, ghasts)
-        #fireball = self.getClosestEntity(playerPos, fireballs)
-
-		    # Get ghast position and fireball position & velocity.
         ghastPos = np.array([ghast['x'], ghast['y'], ghast['z']])
-        fireball = 0 
-        fireballPos = 0
-        fireballVelocity = 0
-        if useghastasfireball == False:
+
+		# Get fireball position and velocity.
+        # If there is no fireball, use ghast position.
+        useGhastAsfireball = len(fireballs) == 0
+        if not useGhastAsfireball:
             fireball = self.getClosestEntity(self.playerPos, fireballs)
             fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
             fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
@@ -269,7 +254,7 @@ class Agent():
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
         print(f'Summoned ghast at ({x:.2f}, {y:.2f}, {z:.2f}), yaw: {yaw:.2f}')
-        time.sleep(0.1)
+        time.sleep(0.5)
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
@@ -284,6 +269,12 @@ class Agent():
         z = distance * math.sin(math.radians(degree - 90))
         yaw = degree if degree <= 180 else degree - 360 # Fix yaw degree for NN input.
         self.summonGhast(x + self.playerPos[0], y, z + self.playerPos[2], yaw, stationary)
+
+    def summonGhastRandomly(self, stationary=True):
+        degree = random.randint(0, 359)
+        distance = random.randint(15, 30)
+        height = self.playerPos[1] + random.randint(0, 5) # If too high, ghast doesn't attack player?
+        self.summonGhastAroundPlayer(degree, distance, height, stationary)
 
 
 
