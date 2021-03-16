@@ -190,7 +190,7 @@ class transform:
         self.pitch = 0
         self.yaw = 0
         self.scale = np.ones((1,3) , dtype = np.float32)                                                         #scale identity
-        self.forward = np.asarray([0,0,1], dtype=np.float32)
+        self.forward = np.asarray([0,0,-1], dtype=np.float32)
 
     def get_position(self):
         return self.position.copy()
@@ -219,7 +219,7 @@ class transform:
         self.yaw += dyaw                                                                         #in malmo , positive pitch goes down, negative up 
         self.pitch = np.clip( self.pitch , -89, 89.0)                                                    #pitch is clamped between -90 and 90
         self.yaw += (360 if self.yaw < -.01 else 0) - (360 if self.yaw >= 360 else 0)           #yaw loops over
-        fwd = np.asarray([0,0,1], dtype = np.float32)
+        fwd = np.asarray([0,0,-1], dtype = np.float32)
         
         #old pyquaternion implementation
         '''
@@ -555,7 +555,7 @@ if(__name__ == "__main__"):
     starttime = time.time()
     #test4()
     #test6()
-    test9()
+    test7()
     elapsedtime = time.time()-starttime
     print("End time is " , elapsedtime)
 

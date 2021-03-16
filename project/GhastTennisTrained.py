@@ -11,10 +11,11 @@ from neuralnetdebug import NetworkV3, PerfectNetwork
 
 def main():
     # Load NN data.
-    # trainedAI = NetworkV3([1])
-    trainedAI = PerfectNetwork()
-    #trainedAI.loadtxt(119) # load trained agent from files
 
+
+    trainedAI=NetworkV3([])
+    trainedAI = PerfectNetwork()
+    #trainedAI.loadtxt(120) # load trained agent from files
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
@@ -123,6 +124,7 @@ class Agent():
 
         self.summonGhastRandomly()
 
+
     def takeAction(self, world_state):
         '''
         Compute the next action for the agent to take.
@@ -161,10 +163,11 @@ class Agent():
         self.virtualWorld.player.transform.set_rotation(self.playerPitch, self.playerYaw) 
 
         # Create the observation input for the NN.
-        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos)
-        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)
-        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity, direction=True)
-        observationData = np.array([ghastPoint, fireballPoint, fireballVel]).reshape(9, 1)
+        ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos) * np.asarray([1,1,1])
+        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)* np.asarray([1,1,1])
+        fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)* np.asarray([1,1,1])
+        observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
+
 
         # Get the output from the NN.
         cmd = self.virtualWorld.player.brain(observationData)
@@ -275,6 +278,7 @@ class Agent():
         distance = random.randint(15, 30)
         height = self.playerPos[1] + random.randint(0, 5) # If too high, ghast doesn't attack player?
         self.summonGhastAroundPlayer(degree, distance, height, stationary)
+
 
 
 

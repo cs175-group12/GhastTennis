@@ -12,8 +12,8 @@ warnings.filterwarnings("ignore")
 #multiprocessing.set_start_method("spawn",True)
 population = 128 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 100
-saveas = 119
+generations = 75
+saveas = 120
 mutation_factor = 3
 AIsAndWorlds = list()
 
