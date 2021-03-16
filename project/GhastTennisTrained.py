@@ -262,6 +262,7 @@ class Agent():
         else:
             self.agent_host.sendCommand(f'chat /summon Ghast {x} {y} {z} {{Rotation:[{yaw}f, 0f]}}')
         print(f'Summoned ghast at ({x:.2f}, {y:.2f}, {z:.2f}), yaw: {yaw}')
+        time.sleep(0.1)
 
     def summonGhastAroundPlayer(self, degree, distance, y, stationary=True):
         '''
