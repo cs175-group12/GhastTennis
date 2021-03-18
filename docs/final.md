@@ -63,7 +63,7 @@ When I was about to give up on neural networks I considered a few options that w
 
 ![](/assets/images/the power of sex - neural net v4.png)
 
-<center><small>Sexually Reproduction Creats Agents that Score Almost 2x as Highly, in A Fraction of the Training Time .</small></center>
+<center><small>Sexual Reproduction Creats Agents that Score Almost 2x as Highly, in A Fraction of the Training Time .</small></center>
 
 It worked far better than I could have hoped for. Each output of the new ensemble - NeuralNetV4 - is handled by its own network, that has a binary mask it multiplies the input by, meaning each one only takes a fraction of the input. Networks reproduce, with each in the top quartile reproducing twice with two networks ranked worse than it. Each offspring recieves a 50 50 chance of having a given subnetwork from one parent or the other, and either way slightly mutates in place. These ensembles outstrip the previous iterations easily, outtraining them sometimes in as little as 5 generations. These enabled me to make the training more difficult and specific, shrinking the ghasts and moving them further away and making them shoot only if the player is not too close, and punishing the player for attacking with the confidence that it wouldn't just evolve agents that wouldn't attack at all.  
 
@@ -95,7 +95,7 @@ Right: Same thing, but forward is (0, 0, -1), like real Minecraft.</center>
 
 <center>Rate of Learning of Sexually Reproducing Agents in Same Environment.</center>
 
-:------------------------------------------------------------------------------------------------------------:
+:----------------------------------------------------------------------------------------------------------------:
 ![](/assets/images/the power of sex - neural net v4.png){:width="600px"}  
 
 ### Qualitative 
