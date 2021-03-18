@@ -144,9 +144,9 @@ class world:
         self.entities.append(entity)
 
     def reward_attack(self, hit : bool, direction, fireball): #fireball may be none
-        #self.score -= .1
+        self.score -= .125
         if(hit):
-            self.score+= 5
+            self.score+= 5.125
 
     def reward_explode(self):#player hit by fireball
         return
@@ -285,7 +285,7 @@ class ghast(entity):                                                            
     '''ghasts spawn and stay still, firing a fireball at the player every 2 seconds'''
     def start(self):
         #self.velocity = np.asarray([1.0,0.0,0.0])
-        self.radius = 2
+        self.radius = 1.5
         self.fireinterval = 2
         self.lastfiretime = -2
         self.ghastsKilled = 0
@@ -376,7 +376,7 @@ class agent(entity):                                          #max turn speed is
 
         #normalize from sigmoid to -1 to 1
         
-        self.cmd = self.cmd * 2 - 1     
+        self.cmd = self.cmd * 2.0 - 1.0     
 
         self.turn(self.cmd[2], self.cmd[3])
 

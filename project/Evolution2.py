@@ -12,8 +12,8 @@ warnings.filterwarnings("ignore")
 #multiprocessing.set_start_method("spawn",True)
 population = 128 #power of 2, population *3/4 must be divisible by threads
 boom = 8    #large population will be 8x size of population
-generations = 250
-saveas = 6
+generations = 25
+saveas = 14
 mutation_factor = 3
 AIsAndWorlds = list()
 threads = 12
@@ -81,8 +81,8 @@ def main():
     
     print("Highscore: ", AIsAndWorlds[-1][1].score)
     AIsAndWorlds[-1][0].save(saveas)
-    AIsAndWorlds[-2][0].save(saveas+1)
-    AIsAndWorlds[-3][0].save(saveas+2)
+    #AIsAndWorlds[-2][0].save(saveas+1)
+    #AIsAndWorlds[-3][0].save(saveas+2)
     np.save("Highscores/Highscore_%d,_generations_%d,_population_%d,mutation_factor_%d" % (saveas,generations,population,mutation_factor), np.asarray(highscores))
 
         

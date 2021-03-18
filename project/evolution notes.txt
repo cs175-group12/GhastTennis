@@ -23,3 +23,6 @@ network version 4
 3 ghast fireball starts at +1.5 y
 4 ghast will not shoot if player is within 4 units
 5 more generations, ghasts spawn further away and further apart
+6 more training, saved 3
+9 punish swing by .125
+12 punish swing a bit and shrink ghast

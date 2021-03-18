@@ -13,11 +13,11 @@ def main():
     # Load NN data.
 
 
-    trainedAI=NeuralNetV4.load(4)
+    trainedAI=NeuralNetV4.load(11)
     #trainedAI = PerfectNetwork()
     #trainedAI.loadtxt(120) # load trained agent from files
     # Create agent.
-    runs = 10
+    runs = 12
     agent = Agent(trainedAI)
     for i in range(runs):
         agent.start(i + 1)
@@ -59,7 +59,6 @@ class Agent():
 
         # Take action while the mission is running.
         while world_state.is_mission_running:
-            time.sleep(0.1)
             world_state = self.agent_host.getWorldState()
             self.takeAction(world_state)
             for error in world_state.errors:
@@ -129,12 +128,15 @@ class Agent():
         '''
         Compute the next action for the agent to take.
         '''
-
+        time1 = time.time_ns()
         # Get observation from the Minecraft world.
         player, ghasts, fireballs = self.getObservations(world_state)
 
+        if(player==None):
+            return
+
         # Summon ghast when there is no more.
-        if len(ghasts) == 0:
+        if len(ghasts) < 1:
             self.summonGhastRandomly()
             return
 
@@ -153,7 +155,7 @@ class Agent():
         if not useGhastAsfireball:
             fireball = self.getClosestEntity(self.playerPos, fireballs)
             fireballPos = np.array([fireball['x'], fireball['y'], fireball['z']])
-            fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])
+            fireballVelocity = np.array([fireball['motionX'], fireball['motionY'], fireball['motionZ']])/.05
         else:
             fireballPos = ghastPos.copy()
             fireballVelocity = np.array([0,0,0])
@@ -164,7 +166,7 @@ class Agent():
 
         # Create the observation input for the NN.
         ghastPoint = self.virtualWorld.player.transform.world_to_local(ghastPos) * np.asarray([1,1,1])
-        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)* np.asarray([1,1,1])
+        fireballPoint = self.virtualWorld.player.transform.world_to_local(fireballPos)*np.asarray([1,1,1])
         fireballVel = self.virtualWorld.player.transform.world_to_local(fireballVelocity,direction=True)* np.asarray([1,1,1])
         observationData = np.asarray([ghastPoint,fireballPoint,fireballVel]).reshape(9,1)
 
@@ -173,10 +175,10 @@ class Agent():
 
         # Parse the output to Malmo format.
         move = f"move {cmd[0][0] * 2 -1 }"
-        strafe = f"strafe {cmd[1][0] * 2 - 1}"
-        pitch = f"pitch {cmd[2][0] *-1.5 + 1}"
-        turn = f"turn {cmd[3][0] * 1.5 - 1}"
-        attack = f"attack {1 if cmd[4][0] > 0 else 0}"
+        strafe = f"strafe {cmd[1][0] *2-1}"
+        pitch = f"pitch {cmd[2][0] *-2 + 1}"
+        turn = f"turn {cmd[3][0] * 2 - 1}"
+        attack = f"attack {1 if cmd[4][0] > .01 else 0}"
 
         # Run the output.
         self.agent_host.sendCommand(move)
@@ -189,6 +191,8 @@ class Agent():
         #time.sleep(0.1)
         self.agent_host.sendCommand(attack)
         #time.sleep(0.05)
+        time2 = time.time_ns()
+        #print("Computation completed in %f"%(time2-time1))
 
     def getObservations(self, world_state):
         '''
@@ -278,7 +282,7 @@ class Agent():
         '''
         
         degree = random.randint(0, 359)
-        distance = random.randint(15, 30)
+        distance = random.randint(10, 15)
         height = self.playerPos[1] + random.randint(0, 5) # If too high, ghast doesn't attack player?
         self.summonGhastAroundPlayer(degree, distance, height, stationary)
 
