@@ -95,7 +95,7 @@ Right: Same thing, but forward is (0, 0, -1), like real Minecraft.</center>
 
 <center>Rate of Learning of Sexually Reproducing Agents in Same Environment.</center>
 
-:-------------------------:|:-------------------------:
+:------------------------------------------------------------------------------------------------------------:
 ![](/assets/images/the power of sex - neural net v4.png){:width="600px"}  
 
 ### Qualitative 
