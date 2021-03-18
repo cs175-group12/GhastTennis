@@ -7,15 +7,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import MalmoPython
 import notminecraft
-from neuralnetdebug import NetworkV3, PerfectNetwork
+from neuralnetdebug import NetworkV3, PerfectNetwork,NeuralNetV4
 
 def main():
     # Load NN data.
 
 
-    trainedAI=NetworkV3([])
+    trainedAI=NeuralNetV4.load(4)
     #trainedAI = PerfectNetwork()
-    trainedAI.loadtxt(120) # load trained agent from files
+    #trainedAI.loadtxt(120) # load trained agent from files
     # Create agent.
     runs = 10
     agent = Agent(trainedAI)
@@ -172,10 +172,10 @@ class Agent():
         cmd = self.virtualWorld.player.brain(observationData)
 
         # Parse the output to Malmo format.
-        move = f"move {cmd[0][0] * -2 +1 }"
-        strafe = f"strafe {cmd[1][0] * -2 + 1}"
-        pitch = f"pitch {cmd[2][0] *-2 + 1}"
-        turn = f"turn {cmd[3][0] * 2 - 1}"
+        move = f"move {cmd[0][0] * 2 -1 }"
+        strafe = f"strafe {cmd[1][0] * 2 - 1}"
+        pitch = f"pitch {cmd[2][0] *-1.5 + 1}"
+        turn = f"turn {cmd[3][0] * 1.5 - 1}"
         attack = f"attack {1 if cmd[4][0] > 0 else 0}"
 
         # Run the output.
@@ -188,7 +188,7 @@ class Agent():
         self.agent_host.sendCommand(turn)
         #time.sleep(0.1)
         self.agent_host.sendCommand(attack)
-        time.sleep(0.05)
+        #time.sleep(0.05)
 
     def getObservations(self, world_state):
         '''

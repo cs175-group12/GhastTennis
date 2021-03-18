@@ -174,7 +174,28 @@ class NetworkV3:
         #use npy later
         self.savetxt(r)
 
+    def saveassubnet(self,savenum,index):
+        for i in range(1,len(self.layersizes)):
+            np.save("subnetworks/biases%d_of_subnet_%d_of_network_%d.npy"%(i,index,savenum) , self.biases[i])
+            np.save("subnetworks/weights%d_of_subnet_%d_of_network_%d.npy"%(i,index,savenum), self.axons[i-1])
 
+    def loadsubnet(self,savenum,index,inputsize = 9):
+        biases = [np.zeros((inputsize,1))]
+        weights = []
+        try:
+            for i in range(1,10):
+                biases.append(np.load("subnetworks/biases%d_of_subnet_%d_of_network_%d.npy"%(i,index,savenum) ).reshape(-1,1))
+                weights.append(np.load("subnetworks/weights%d_of_subnet_%d_of_network_%d.npy"%(i,index,savenum)))        
+        except OSError:
+            pass
+        self.biases= biases
+        self.axons = weights
+        self.layersizes = [] # didnt save layersizes so im just assuming input it 9
+        self.neurons.clear() #technically i could get that from shape[1] of weights[0] tho
+        #self.neurons.append()
+        for i in range(len(self.biases)):
+            self.layersizes.append(len(self.biases[i]))
+            self.neurons.append(np.zeros((len(self.biases[i]),1)))
 
     def loadtxt(self,r:int):
         biases = [np.zeros((9,1))]
@@ -224,18 +245,116 @@ class PerfectNetwork():
         return np.copy(self.neurons[-1])
 
 #wrapper for network v3 to be used in network v4
-#takes in a mask for input (of same dimension) and outputs 1
+#takes in a mask for input (of same dimension), and hidenlayersizes and outputs 1
 class Subnetwork():
     #mask must be an array of 1's and 0's
-    def __init__(self,mask):
+    def __init__(self,mask, hiddensizes = [], network = None):
         input_0_size = len(mask)
-        self.inputsize = np.sum(mask)
+        mask = np.array(mask,dtype=np.int8)
         self.mask = mask
+        if(network is None):    
+            self.layersizes = [input_0_size, *hiddensizes, 1]
+            self.network = NetworkV3(self.layersizes)
+        else:
+            self.network = network
+            self.layersizes = network.layersizes
+            assert self.layersizes[0] == len(self.mask)
+        self.network.biases[1]*=0
+        return
+    
+    def predict(self,input):
+        input = input.copy()
+        input *= self.mask
+        return self.network.predict(input)
+    
+    def reproduce(self):
+        childnetwork = self.network.reproduce()
+        childsubnetwork = Subnetwork(self.mask.copy(), network=childnetwork)
+        return childsubnetwork
+
+    def mutate(self, rate, amount = 1):
+        self.network.mutate(rate,amount)
+        return
+    
+    def save(self,savenum,index):
+        np.save("subnetworks/mask%d_of_network_%d"%(index,savenum), self.mask)
+        self.network.saveassubnet(savenum,index)
+    
+    @staticmethod
+    def load(savenum,index):
+        s = Subnetwork([0])
+        mask = np.load("subnetworks/mask%d_of_network_%d.npy"%(index,savenum))
+        masklen = len(mask)
+        s.mask = mask
+        n = NetworkV3([0])
+        n.loadsubnet(savenum,index,masklen)
+        s.network = n
+        return s
+
+
+
 
     
 class NeuralNetV4():
-    def __init__(self,inputsize,outputsize):
-        self.networks = []
+    '''def __init__(self,inputsize,outputsize,mindepth, maxdepth, minsize, maxsize, p_mask = .5, clone  : NeuralNetV4 = None):'''
+    def __init__(self,inputsize,outputsize,mindepth, maxdepth, minsize, maxsize, p_mask = .5, clone  = None):
+        self.subscores = [0] * outputsize #not utilizing this yet, idea is to preferentially pass on good subnets
+        assert p_mask > .01
+        if(clone is None):
+            self.subnetworks = []
+            self.inputsize = inputsize
+            self.outputsize = outputsize
+            for i in range(outputsize):
+                mask = (np.random.random_sample( size = (inputsize,1) ) < p_mask) * 1.0
+                while(np.sum(mask)==0):
+                    mask = (np.random.random_sample( size = (inputsize,1) ) < p_mask) * 1.0
+                hidden = np.random.random_integers(low = minsize, high = maxsize, size = np.random.random_integers(low=mindepth, high = maxdepth))
+                self.subnetworks.append( Subnetwork(mask,hidden) )
+        else :
+            self.subnetworks = []
+            for i in range(clone.outputsize):
+                self.subnetworks.append(clone.subnetworks[i].reproduce())
+            self.inputsize = clone.inputsize
+            self.outputsize = clone.outputsize
+        return
+        
+    def predict(self,input):
+        output = np.zeros(shape = (self.outputsize, 1))
+        for i in range(self.outputsize):
+            output[i,0] = self.subnetworks[i].predict(input)[0,0]
+        return output
+    
+    def clone(self):
+        c = NeuralNetV4(0,0,0,0,0,0,clone = self)
+        return c
+
+    def reproduce_with(self, other):
+        c = self.clone()        
+        whichjeans = np.random.random_integers(low = 0 , high = 1, size = self.outputsize)
+        for i in range(self.outputsize):
+            if(whichjeans[i] == 1 ):
+                c.subnetworks[i] = other.subnetworks[i].reproduce() 
+        return c
+            
+    
+    def mutate(self,rate,amount=1):
+        for i in range(self.outputsize):
+            self.subnetworks[i].mutate(rate,amount)
+        
+    def save(self,savenum):
+        for i in range(len(self.subnetworks)):
+            self.subnetworks[i].save(savenum,i)
+        np.save("subnetworks/networkv4_%d_info"%(savenum), np.asarray([self.inputsize,self.outputsize], dtype=np.int32))
+
+    @staticmethod
+    def load(savenum):
+        n = NeuralNetV4(0,0,0,0,0,0)
+        io = np.load("subnetworks/networkv4_%d_info.npy"%(savenum))
+        n.inputsize = io[0]
+        n.outputsize = io[1]
+        for i in range(n.outputsize):
+            n.subnetworks.append(Subnetwork.load(savenum,i))
+        return n
         
 
     
@@ -266,10 +385,13 @@ def main():
     # pyplot.plot(network2.debuginfo["learning rate"] , color= "blue")
     # pyplot.show()
     # return
-    x = NetworkV3([1])
-    x.loadtxt(7)
+    #x = NetworkV3([1])
+    #x.loadtxt(7)
     #x.mutate()
-    b = 44
+    #b = 44
+    a = []
+    b = [1,*a,5]
+    print(b)
 
 
 

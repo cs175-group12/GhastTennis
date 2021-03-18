@@ -17,3 +17,9 @@
 117 more training, 410 peak, some errors
 118 extended evaluation time, suspected max score hit after 100 gen no improvement on 117
 119 the errors were due to hitting all the ghasts. fixed, training much better now
+
+network version 4
+1-2 testing load/save
+3 ghast fireball starts at +1.5 y
+4 ghast will not shoot if player is within 4 units
+5 more generations, ghasts spawn further away and further apart

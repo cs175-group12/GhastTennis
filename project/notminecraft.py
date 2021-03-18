@@ -289,15 +289,17 @@ class ghast(entity):                                                            
         self.fireinterval = 2
         self.lastfiretime = -2
         self.ghastsKilled = 0
-        self.spawns = np.asarray([[10,2,10], [-10,2,10],[0,-5,10] , [0,5,10], [15,-2,0],  [-10,-10,10], [-10,0,-10], [0,0,0]], dtype=np.float32)
+        self.spawns = np.asarray([[10,2,10], [-10,2,10],[0,-5,10] , [0,5,10], [15,-2,0],  [-10,-10,10], [-10,0,-10], [0,0,0]], dtype=np.float32)*2
         return
     
     def update(self):
         if(self.world.time - self.lastfiretime > self.fireinterval):
-            offset = self.world.player.transform.position  - self.transform.position
+            offset = self.world.player.transform.position  - np.asarray([0.0,1.5,0.0])  - self.transform.position
+            if(offset.dot(offset)<16):
+                return
             direction = (offset)/np.sqrt( (offset.dot(offset))) #normalized direction from ghast to player
             f = fireball(self.world, xyz = self.transform.position.copy())               #create fireball at my position
-            f.transform.translate(direction * 3)                                                                                 #offset it in shoot direction
+            f.transform.translate(direction * 3 + np.asarray([0.0,1.5,0.0]))                                                                                 #offset it in shoot direction
             f.change_direction(direction)                                                                               #tell it to go that way
             self.world.spawn(f)                                                                                         #spawn it
             self.lastfiretime = self.world.time                                                                         #update last fire time
