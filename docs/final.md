@@ -17,7 +17,7 @@ In Minecraft, ghasts are large flying mobs that can shoot fireballs at the playe
 
 For our project, our agent will learn how to kill ghasts by deflecting fireballs back at them. Our agent will be given the position of the ghasts in the environment and the position & motion of the incoming fireballs. The agent will then learn where to aim and when to swing its punch to redirect the fireball to the ghast.
 
-This may initially appear to be a relatively simple problem to code a solution for manually - in fact, we did. However, it was dramatically outperformed by our final AI agent. An AI we created entirely from scratch without the use of any external libraries except numpy and quaternionic, that we trained, and was outperformed 4x in simulation. We will attempt to explain our approach, including our pitfalls and shortcomings as well as our successes, here. 
+This may initially appear to be a relatively simple problem to code a solution for manually - in fact, we did. However, it was dramatically outperformed by our final AI agent. An AI we created entirely from scratch without the use of any external libraries except numpy and quaternionic, outperformed the handmade solution 4x in simulation. We will attempt to explain our approach, including our pitfalls and shortcomings as well as our successes, here. 
 
 ## Approaches
 
